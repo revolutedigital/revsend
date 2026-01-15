@@ -14,6 +14,7 @@ import {
   Settings,
   LogOut,
   FileText,
+  Kanban,
 } from "lucide-react";
 
 const menuItems = [
@@ -21,6 +22,11 @@ const menuItems = [
     label: "Dashboard",
     href: "/dashboard",
     icon: LayoutDashboard,
+  },
+  {
+    label: "Pipeline",
+    href: "/pipeline",
+    icon: Kanban,
   },
   {
     label: "Listas",

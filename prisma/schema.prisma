@@ -21,6 +21,10 @@ model User {
   mediaFiles      MediaFile[]
   templates       MessageTemplate[]
   webhooks        Webhook[]
+  pipelineStages  PipelineStage[]
+  deals           Deal[]
+  dealActivities  DealActivity[]
+  dealTasks       DealTask[]
 
   @@map("users")
 }
@@ -69,6 +73,7 @@ model Contact {
   list         ContactList   @relation(fields: [listId], references: [id], onDelete: Cascade)
   sentMessages SentMessage[]
   replies      Reply[]
+  deals        Deal[]
 
   @@index([listId])
   @@index([phoneNumber])
@@ -224,4 +229,101 @@ model Reply {
 
   @@index([campaignId])
   @@map("replies")
+}
+
+// ==================== CRM MODELS ====================
+
+model PipelineStage {
+  id         String   @id @default(cuid())
+  userId     String   @map("user_id")
+  name       String
+  color      String   @default("#6B7280") // Cor do estágio (hex)
+  orderIndex Int      @default(0) @map("order_index")
+  isFinal    Boolean  @default(false) @map("is_final") // true para "Ganho" ou "Perdido"
+  isWon      Boolean  @default(false) @map("is_won") // true apenas para "Ganho"
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  user  User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  deals Deal[]
+
+  @@index([userId])
+  @@map("pipeline_stages")
+}
+
+model Deal {
+  id        String  @id @default(cuid())
+  userId    String  @map("user_id")
+  contactId String? @map("contact_id")
+  stageId   String  @map("stage_id")
+
+  // Informações do Deal
+  title       String
+  value       Decimal?  @db.Decimal(12, 2) // Valor potencial do negócio
+  probability Int       @default(50) // 0-100 (lead scoring)
+  company     String? // Nome da empresa
+  notes       String? // Observações gerais
+
+  // Datas importantes
+  expectedCloseDate DateTime? @map("expected_close_date")
+  lastContactAt     DateTime? @map("last_contact_at")
+  nextActionAt      DateTime? @map("next_action_at")
+  nextActionNote    String?   @map("next_action_note")
+
+  // Metadados de conclusão
+  lostReason String?   @map("lost_reason") // Se perdido
+  wonAt      DateTime? @map("won_at")
+  lostAt     DateTime? @map("lost_at")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  user       User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  contact    Contact?       @relation(fields: [contactId], references: [id])
+  stage      PipelineStage  @relation(fields: [stageId], references: [id])
+  activities DealActivity[]
+  tasks      DealTask[]
+
+  @@index([userId])
+  @@index([stageId])
+  @@index([contactId])
+  @@map("deals")
+}
+
+model DealActivity {
+  id     String @id @default(cuid())
+  dealId String @map("deal_id")
+  userId String @map("user_id")
+
+  activityType String  @map("activity_type") // 'note', 'call', 'whatsapp', 'email', 'stage_change', 'task_completed'
+  content      String?
+  metadata     Json? // { "from_stage": "x", "to_stage": "y", "old_value": 100, "new_value": 200 }
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  deal Deal @relation(fields: [dealId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id])
+
+  @@index([dealId])
+  @@map("deal_activities")
+}
+
+model DealTask {
+  id     String @id @default(cuid())
+  dealId String @map("deal_id")
+  userId String @map("user_id")
+
+  title       String
+  description String?
+  dueDate     DateTime? @map("due_date")
+  completedAt DateTime? @map("completed_at")
+  priority    String    @default("medium") // low, medium, high
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  deal Deal @relation(fields: [dealId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id])
+
+  @@index([dealId])
+  @@index([userId])
+  @@map("deal_tasks")
 }
