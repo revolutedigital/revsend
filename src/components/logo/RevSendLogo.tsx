@@ -1,0 +1,98 @@
+interface RevSendLogoProps {
+  className?: string;
+}
+
+export function RevSendLogo({ className = "w-24 h-24" }: RevSendLogoProps) {
+  return (
+    <svg
+      viewBox="0 0 120 120"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      className={className}
+    >
+      {/* Fundo circular */}
+      <circle cx="60" cy="60" r="56" fill="#101820" stroke="#ff7336" strokeWidth="2" />
+
+      {/* Foguete - corpo principal */}
+      <path
+        d="M60 20C60 20 45 40 45 65C45 80 52 90 60 95C68 90 75 80 75 65C75 40 60 20 60 20Z"
+        fill="#ff7336"
+      />
+
+      {/* Foguete - janela */}
+      <circle cx="60" cy="50" r="8" fill="#101820" />
+      <circle cx="60" cy="50" r="5" fill="#ffffff" opacity="0.9" />
+
+      {/* Foguete - asas laterais */}
+      <path
+        d="M45 70L32 85C32 85 38 88 45 85V70Z"
+        fill="#ff7336"
+      />
+      <path
+        d="M75 70L88 85C88 85 82 88 75 85V70Z"
+        fill="#ff7336"
+      />
+
+      {/* Foguete - chamas */}
+      <path
+        d="M52 95C52 95 56 105 60 110C64 105 68 95 68 95C68 95 64 100 60 100C56 100 52 95 52 95Z"
+        fill="#ff7336"
+        opacity="0.8"
+      />
+      <path
+        d="M55 95C55 95 58 102 60 105C62 102 65 95 65 95C65 95 62 98 60 98C58 98 55 95 55 95Z"
+        fill="#ffffff"
+        opacity="0.9"
+      />
+
+      {/* Ícone de mensagem/chat no foguete */}
+      <path
+        d="M52 62H68C69.1 62 70 62.9 70 64V72C70 73.1 69.1 74 68 74H62L58 78L58 74H52C50.9 74 50 73.1 50 72V64C50 62.9 50.9 62 52 62Z"
+        fill="#101820"
+      />
+
+      {/* Pontos de mensagem */}
+      <circle cx="56" cy="68" r="1.5" fill="#ff7336" />
+      <circle cx="60" cy="68" r="1.5" fill="#ff7336" />
+      <circle cx="64" cy="68" r="1.5" fill="#ff7336" />
+
+      {/* Efeito de velocidade - linhas */}
+      <path d="M30 45L20 42" stroke="#ff7336" strokeWidth="2" strokeLinecap="round" opacity="0.6" />
+      <path d="M28 55L18 55" stroke="#ff7336" strokeWidth="2" strokeLinecap="round" opacity="0.6" />
+      <path d="M30 65L20 68" stroke="#ff7336" strokeWidth="2" strokeLinecap="round" opacity="0.6" />
+
+      <path d="M90 45L100 42" stroke="#ff7336" strokeWidth="2" strokeLinecap="round" opacity="0.6" />
+      <path d="M92 55L102 55" stroke="#ff7336" strokeWidth="2" strokeLinecap="round" opacity="0.6" />
+      <path d="M90 65L100 68" stroke="#ff7336" strokeWidth="2" strokeLinecap="round" opacity="0.6" />
+    </svg>
+  );
+}
+
+export function RevSendLogoCompact({ className = "w-10 h-10" }: RevSendLogoProps) {
+  return (
+    <svg
+      viewBox="0 0 40 40"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      className={className}
+    >
+      {/* Foguete simplificado */}
+      <path
+        d="M20 4C20 4 12 14 12 24C12 32 16 36 20 38C24 36 28 32 28 24C28 14 20 4 20 4Z"
+        fill="#ff7336"
+      />
+
+      {/* Janela */}
+      <circle cx="20" cy="16" r="3" fill="#101820" />
+
+      {/* Balão de mensagem */}
+      <rect x="15" y="22" width="10" height="6" rx="1" fill="#101820" />
+      <circle cx="17.5" cy="25" r="0.8" fill="#ff7336" />
+      <circle cx="20" cy="25" r="0.8" fill="#ff7336" />
+      <circle cx="22.5" cy="25" r="0.8" fill="#ff7336" />
+
+      {/* Chamas */}
+      <ellipse cx="20" cy="38" rx="3" ry="2" fill="#ff7336" opacity="0.7" />
+    </svg>
+  );
+}

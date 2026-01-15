@@ -1,0 +1,227 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String   @map("password_hash")
+  name         String?
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  whatsappNumbers WhatsappNumber[]
+  contactLists    ContactList[]
+  campaigns       Campaign[]
+  mediaFiles      MediaFile[]
+  templates       MessageTemplate[]
+  webhooks        Webhook[]
+
+  @@map("users")
+}
+
+model WhatsappNumber {
+  id          String   @id @default(cuid())
+  userId      String   @map("user_id")
+  phoneNumber String   @map("phone_number")
+  name        String?
+  sessionData Json?    @map("session_data")
+  status      String   @default("disconnected") // connected, disconnected, banned
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  user            User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  campaignNumbers CampaignNumber[]
+  sentMessages    SentMessage[]
+  replies         Reply[]
+
+  @@map("whatsapp_numbers")
+}
+
+model ContactList {
+  id               String   @id @default(cuid())
+  userId           String   @map("user_id")
+  name             String
+  originalFilename String?  @map("original_filename")
+  totalContacts    Int      @default(0) @map("total_contacts")
+  createdAt        DateTime @default(now()) @map("created_at")
+
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  contacts  Contact[]
+  campaigns Campaign[]
+
+  @@map("contact_lists")
+}
+
+model Contact {
+  id          String   @id @default(cuid())
+  listId      String   @map("list_id")
+  phoneNumber String   @map("phone_number")
+  name        String?
+  extraFields Json?    @map("extra_fields")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  list         ContactList   @relation(fields: [listId], references: [id], onDelete: Cascade)
+  sentMessages SentMessage[]
+  replies      Reply[]
+
+  @@index([listId])
+  @@index([phoneNumber])
+  @@map("contacts")
+}
+
+model Campaign {
+  id                 String    @id @default(cuid())
+  userId             String    @map("user_id")
+  listId             String?   @map("list_id")
+  name               String
+  status             String    @default("draft") // draft, scheduled, running, paused, completed, cancelled
+  minIntervalSeconds Int       @default(30) @map("min_interval_seconds")
+  maxIntervalSeconds Int       @default(120) @map("max_interval_seconds")
+  totalSent          Int       @default(0) @map("total_sent")
+  totalDelivered     Int       @default(0) @map("total_delivered")
+  totalFailed        Int       @default(0) @map("total_failed")
+  totalReplies       Int       @default(0) @map("total_replies")
+  scheduledAt        DateTime? @map("scheduled_at") // agendamento
+  startedAt          DateTime? @map("started_at")
+  completedAt        DateTime? @map("completed_at")
+  createdAt          DateTime  @default(now()) @map("created_at")
+
+  user            User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  list            ContactList?      @relation(fields: [listId], references: [id])
+  messages        CampaignMessage[]
+  campaignNumbers CampaignNumber[]
+  sentMessages    SentMessage[]
+  replies         Reply[]
+
+  @@map("campaigns")
+}
+
+model CampaignMessage {
+  id         String   @id @default(cuid())
+  campaignId String   @map("campaign_id")
+  content    String
+  mediaType  String?  @map("media_type") // text, image, audio, video
+  mediaUrl   String?  @map("media_url") // URL do arquivo de mídia
+  mediaName  String?  @map("media_name") // Nome original do arquivo
+  orderIndex Int      @default(0) @map("order_index")
+  timesUsed  Int      @default(0) @map("times_used")
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  campaign     Campaign      @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  sentMessages SentMessage[]
+
+  @@map("campaign_messages")
+}
+
+model MediaFile {
+  id           String   @id @default(cuid())
+  userId       String   @map("user_id")
+  filename     String
+  originalName String   @map("original_name")
+  mimeType     String   @map("mime_type")
+  size         Int
+  url          String
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("media_files")
+}
+
+model MessageTemplate {
+  id        String   @id @default(cuid())
+  userId    String   @map("user_id")
+  name      String
+  category  String? // prospecção, follow-up, lembrete, etc
+  content   String
+  mediaType String?  @map("media_type")
+  mediaUrl  String?  @map("media_url")
+  mediaName String?  @map("media_name")
+  timesUsed Int      @default(0) @map("times_used")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("message_templates")
+}
+
+model Webhook {
+  id           String    @id @default(cuid())
+  userId       String    @map("user_id")
+  name         String
+  url          String
+  secret       String? // Para validação HMAC
+  events       String[] // campaign.started, campaign.completed, message.sent, message.failed, reply.received
+  isActive     Boolean   @default(true) @map("is_active")
+  lastError    String?   @map("last_error")
+  lastCalledAt DateTime? @map("last_called_at")
+  createdAt    DateTime  @default(now()) @map("created_at")
+  updatedAt    DateTime  @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("webhooks")
+}
+
+model CampaignNumber {
+  id               String @id @default(cuid())
+  campaignId       String @map("campaign_id")
+  whatsappNumberId String @map("whatsapp_number_id")
+  messagesSent     Int    @default(0) @map("messages_sent")
+  repliesReceived  Int    @default(0) @map("replies_received")
+
+  campaign       Campaign       @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  whatsappNumber WhatsappNumber @relation(fields: [whatsappNumberId], references: [id])
+
+  @@map("campaign_numbers")
+}
+
+model SentMessage {
+  id               String    @id @default(cuid())
+  campaignId       String    @map("campaign_id")
+  contactId        String    @map("contact_id")
+  whatsappNumberId String    @map("whatsapp_number_id")
+  messageId        String    @map("message_id")
+  status           String    @default("pending") // pending, sent, delivered, failed, replied
+  sentAt           DateTime? @map("sent_at")
+  deliveredAt      DateTime? @map("delivered_at")
+  errorMessage     String?   @map("error_message")
+  createdAt        DateTime  @default(now()) @map("created_at")
+
+  campaign       Campaign        @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  contact        Contact         @relation(fields: [contactId], references: [id])
+  whatsappNumber WhatsappNumber  @relation(fields: [whatsappNumberId], references: [id])
+  message        CampaignMessage @relation(fields: [messageId], references: [id])
+  replies        Reply[]
+
+  @@index([campaignId])
+  @@index([status])
+  @@map("sent_messages")
+}
+
+model Reply {
+  id               String   @id @default(cuid())
+  sentMessageId    String?  @map("sent_message_id")
+  campaignId       String   @map("campaign_id")
+  contactId        String   @map("contact_id")
+  whatsappNumberId String   @map("whatsapp_number_id")
+  content          String
+  receivedAt       DateTime @default(now()) @map("received_at")
+
+  sentMessage    SentMessage?   @relation(fields: [sentMessageId], references: [id])
+  campaign       Campaign       @relation(fields: [campaignId], references: [id])
+  contact        Contact        @relation(fields: [contactId], references: [id])
+  whatsappNumber WhatsappNumber @relation(fields: [whatsappNumberId], references: [id])
+
+  @@index([campaignId])
+  @@map("replies")
+}
