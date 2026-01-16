@@ -96,6 +96,12 @@ export default function NewCampaignPage() {
   const [loadingWhatsapps, setLoadingWhatsapps] = useState(true);
   const [creating, setCreating] = useState(false);
 
+  // AI Modal state
+  const [aiModalOpen, setAiModalOpen] = useState(false);
+  const [aiContext, setAiContext] = useState("");
+  const [aiVariationCount, setAiVariationCount] = useState<5 | 10>(5);
+  const [generatingAI, setGeneratingAI] = useState(false);
+
   useEffect(() => {
     // Carregar templates
     fetch("/api/templates")
@@ -215,6 +221,53 @@ export default function NewCampaignPage() {
       messages.some((m) => m.content.trim()) &&
       selectedWhatsAppIds.length > 0
     );
+  };
+
+  const handleGenerateAIVariations = async () => {
+    if (!aiContext.trim()) return;
+
+    setGeneratingAI(true);
+    try {
+      const response = await fetch("/api/ai/variations", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          message: aiContext,
+          count: aiVariationCount,
+        }),
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || "Erro ao gerar variações");
+      }
+
+      const data = await response.json();
+
+      if (data.variations && data.variations.length > 0) {
+        // Se a primeira mensagem está vazia, substitui
+        if (messages.length === 1 && !messages[0].content.trim() && !messages[0].media) {
+          setMessages(data.variations.map((v: string) => ({ content: v, media: null })));
+        } else {
+          // Adiciona as variações às mensagens existentes (até o limite de 10)
+          const newMessages = [...messages];
+          for (const variation of data.variations) {
+            if (newMessages.length < 10) {
+              newMessages.push({ content: variation, media: null });
+            }
+          }
+          setMessages(newMessages);
+        }
+
+        setAiModalOpen(false);
+        setAiContext("");
+      }
+    } catch (error) {
+      console.error("Erro ao gerar variações:", error);
+      alert(error instanceof Error ? error.message : "Erro ao gerar variações com IA");
+    } finally {
+      setGeneratingAI(false);
+    }
   };
 
   const handleCreateCampaign = async () => {
@@ -479,7 +532,11 @@ export default function NewCampaignPage() {
                       </DialogContent>
                     </Dialog>
                   )}
-                  <Button variant="outline" className="gap-2">
+                  <Button
+                    variant="outline"
+                    className="gap-2"
+                    onClick={() => setAiModalOpen(true)}
+                  >
                     <Sparkles className="h-4 w-4" />
                     Gerar Variações com IA
                   </Button>
@@ -782,6 +839,104 @@ export default function NewCampaignPage() {
           </div>
         </Card>
       </div>
+
+      {/* AI Variations Modal */}
+      <Dialog open={aiModalOpen} onOpenChange={setAiModalOpen}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Sparkles className="h-5 w-5 text-orange" />
+              Gerar Variações com IA
+            </DialogTitle>
+            <DialogDescription>
+              Descreva o contexto da sua mensagem e a IA irá criar variações automaticamente.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 mt-2">
+            {/* Context Input */}
+            <div className="space-y-2">
+              <Label htmlFor="aiContext">Contexto da Mensagem</Label>
+              <textarea
+                id="aiContext"
+                className="w-full min-h-[120px] p-3 border rounded-md resize-none bg-background"
+                placeholder="Ex: Olá {nome}, tudo bem? Sou da empresa X e gostaria de apresentar nossos serviços de marketing digital que podem ajudar sua empresa a crescer..."
+                value={aiContext}
+                onChange={(e) => setAiContext(e.target.value)}
+              />
+              <p className="text-xs text-muted-foreground">
+                Escreva a mensagem base que deseja usar. Use {"{nome}"} para personalização.
+              </p>
+            </div>
+
+            {/* Variation Count */}
+            <div className="space-y-2">
+              <Label>Quantidade de Variações</Label>
+              <div className="flex gap-3">
+                <button
+                  type="button"
+                  onClick={() => setAiVariationCount(5)}
+                  className={`flex-1 py-3 px-4 rounded-lg border-2 transition-all ${
+                    aiVariationCount === 5
+                      ? "border-orange bg-orange/10 text-orange"
+                      : "border-muted hover:border-muted-foreground/50"
+                  }`}
+                >
+                  <div className="font-bold text-lg">5</div>
+                  <div className="text-xs text-muted-foreground">variações</div>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setAiVariationCount(10)}
+                  className={`flex-1 py-3 px-4 rounded-lg border-2 transition-all ${
+                    aiVariationCount === 10
+                      ? "border-orange bg-orange/10 text-orange"
+                      : "border-muted hover:border-muted-foreground/50"
+                  }`}
+                >
+                  <div className="font-bold text-lg">10</div>
+                  <div className="text-xs text-muted-foreground">variações</div>
+                </button>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Mais variações = menos chance de bloqueio no WhatsApp
+              </p>
+            </div>
+
+            {/* Actions */}
+            <div className="flex justify-end gap-2 pt-2">
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setAiModalOpen(false);
+                  setAiContext("");
+                }}
+                disabled={generatingAI}
+              >
+                Cancelar
+              </Button>
+              <Button
+                variant="orange"
+                onClick={handleGenerateAIVariations}
+                disabled={generatingAI || !aiContext.trim()}
+                className="gap-2"
+              >
+                {generatingAI ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Gerando...
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="h-4 w-4" />
+                    Gerar {aiVariationCount} Variações
+                  </>
+                )}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }

@@ -18,9 +18,9 @@ export async function POST(request: Request) {
       );
     }
 
-    if (count < 1 || count > 9) {
+    if (count < 1 || count > 10) {
       return NextResponse.json(
-        { error: "Quantidade deve ser entre 1 e 9" },
+        { error: "Quantidade deve ser entre 1 e 10" },
         { status: 400 }
       );
     }
