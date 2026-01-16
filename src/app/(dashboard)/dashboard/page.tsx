@@ -1,5 +1,6 @@
 import { Header } from "@/components/dashboard/Header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { EmptyStateIllustration } from "@/components/illustrations/EmptyState";
 import { Send, Users, MessageSquare, TrendingUp } from "lucide-react";
 
 const stats = [
@@ -108,15 +109,15 @@ export default function DashboardPage() {
         </div>
 
         {/* Recent Campaigns */}
-        <Card>
+        <Card className="hover:shadow-card-hover transition-shadow duration-300">
           <CardHeader>
-            <CardTitle>Campanhas Recentes</CardTitle>
+            <CardTitle className="font-display">Campanhas Recentes</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-center py-8 text-muted-foreground">
-              <Send className="h-12 w-12 mx-auto mb-3 opacity-50" />
-              <p>Nenhuma campanha criada ainda</p>
-              <p className="text-sm">
+            <div className="text-center py-8">
+              <EmptyStateIllustration variant="campaigns" className="w-40 h-40 mx-auto mb-4" />
+              <p className="text-foreground font-medium">Nenhuma campanha criada ainda</p>
+              <p className="text-sm text-muted-foreground mt-1">
                 Crie sua primeira campanha para começar a prospectar
               </p>
             </div>

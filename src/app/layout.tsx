@@ -20,7 +20,21 @@ const dmSans = DM_Sans({
 
 export const metadata: Metadata = {
   title: "RevSend - Prospecção que Converte",
-  description: "Dispare mensagens no WhatsApp sem bloqueios. Prospecção ativa inteligente.",
+  description: "Dispare mensagens no WhatsApp sem bloqueios. Prospecção ativa inteligente com rotação de números e mensagens.",
+  keywords: ["whatsapp", "prospecção", "vendas", "disparo em massa", "marketing"],
+  authors: [{ name: "RevSend" }],
+  openGraph: {
+    title: "RevSend - Prospecção que Converte",
+    description: "Dispare mensagens no WhatsApp sem bloqueios. Sistema anti-bloqueio inteligente.",
+    type: "website",
+    locale: "pt_BR",
+    siteName: "RevSend",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "RevSend - Prospecção que Converte",
+    description: "Dispare mensagens no WhatsApp sem bloqueios. Sistema anti-bloqueio inteligente.",
+  },
 };
 
 export default function RootLayout({

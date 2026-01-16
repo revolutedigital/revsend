@@ -1,0 +1,33 @@
+<svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="iconGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stopColor="#FF6B35" />
+      <stop offset="100%" stopColor="#FF8F5C" />
+    </linearGradient>
+  </defs>
+
+  <!-- Background -->
+  <rect width="32" height="32" rx="8" fill="#0A1628"/>
+
+  <!-- Wave -->
+  <path
+    d="M10 16C10 13.2 12.2 11 15 11"
+    stroke="#FF6B35"
+    strokeWidth="2"
+    strokeLinecap="round"
+    fill="none"
+    opacity="0.4"
+  />
+
+  <!-- Arrow -->
+  <path
+    d="M12 22L16 10L24 18L16 15.5L13.5 20L12 22Z"
+    fill="url(#iconGradient)"
+  />
+
+  <!-- Center dot -->
+  <circle cx="16" cy="16" r="2.5" fill="#FF6B35" />
+
+  <!-- Accent -->
+  <circle cx="22" cy="11" r="2" fill="#00D9A5" />
+</svg>
