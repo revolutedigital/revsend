@@ -92,7 +92,9 @@ export default function LoginPage() {
 
           <Button
             type="submit"
-            className="w-full btn-primary"
+            variant="coral"
+            size="lg"
+            className="w-full"
             disabled={loading}
           >
             {loading ? (

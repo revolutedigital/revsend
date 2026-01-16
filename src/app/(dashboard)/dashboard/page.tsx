@@ -81,7 +81,7 @@ export default function DashboardPage() {
               </p>
               <a
                 href="/campaigns/new"
-                className="btn-primary inline-flex items-center gap-2"
+                className="inline-flex items-center gap-2 bg-coral hover:bg-coral-600 text-white font-semibold py-2.5 px-5 rounded-lg transition-all hover:shadow-glow"
               >
                 <Send className="h-4 w-4" />
                 Nova Campanha
@@ -99,7 +99,7 @@ export default function DashboardPage() {
               </p>
               <a
                 href="/lists"
-                className="btn-secondary inline-flex items-center gap-2"
+                className="inline-flex items-center gap-2 border-2 border-coral text-coral hover:bg-coral hover:text-white font-semibold py-2.5 px-5 rounded-lg transition-all"
               >
                 <Users className="h-4 w-4" />
                 Gerenciar Listas
