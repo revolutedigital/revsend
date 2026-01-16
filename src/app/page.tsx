@@ -45,13 +45,13 @@ export default function Home() {
           <div className="space-y-4 pt-4 animate-in-up animate-in-up-delay-2">
             <Link
               href="/login"
-              className="block w-full text-center bg-coral hover:bg-coral-600 text-white font-semibold py-3 px-6 rounded-lg transition-all hover:shadow-glow hover:-translate-y-0.5"
+              className="block w-full text-center bg-[#FF6B35] hover:bg-[#E85520] text-white font-semibold py-3 px-6 rounded-lg transition-all hover:shadow-glow hover:-translate-y-0.5"
             >
               Entrar
             </Link>
             <Link
               href="/register"
-              className="block w-full text-center border-2 border-coral text-coral hover:bg-coral hover:text-white font-semibold py-3 px-6 rounded-lg transition-all hover:-translate-y-0.5"
+              className="block w-full text-center border-2 border-[#FF6B35] text-[#FF6B35] hover:bg-[#FF6B35] hover:text-white font-semibold py-3 px-6 rounded-lg transition-all hover:-translate-y-0.5"
             >
               Criar Conta
             </Link>
