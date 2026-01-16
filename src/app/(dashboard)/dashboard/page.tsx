@@ -48,9 +48,9 @@ export default function DashboardPage() {
 
       <div className="p-6 space-y-6">
         {/* Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 stagger-fast">
           {stats.map((stat) => (
-            <Card key={stat.title}>
+            <Card key={stat.title} className="hover:shadow-card-hover transition-all duration-300">
               <CardHeader className="flex flex-row items-center justify-between pb-2">
                 <CardTitle className="text-sm font-medium text-muted-foreground">
                   {stat.title}
@@ -71,9 +71,14 @@ export default function DashboardPage() {
 
         {/* Quick Actions */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <Card className="hover:shadow-card-hover transition-shadow duration-300">
+          <Card className="hover:shadow-card-hover transition-shadow duration-300 group">
             <CardHeader>
-              <CardTitle className="font-display">Iniciar Nova Campanha</CardTitle>
+              <CardTitle className="font-display flex items-center gap-2">
+                <div className="p-2 rounded-lg bg-coral/10 group-hover:bg-coral/20 transition-colors">
+                  <Send className="h-5 w-5 text-coral" />
+                </div>
+                Iniciar Nova Campanha
+              </CardTitle>
             </CardHeader>
             <CardContent>
               <p className="text-muted-foreground mb-4">
@@ -81,7 +86,7 @@ export default function DashboardPage() {
               </p>
               <a
                 href="/campaigns/new"
-                className="inline-flex items-center gap-2 bg-[#FF6B35] hover:bg-[#E85520] text-white font-semibold py-2.5 px-5 rounded-lg transition-all hover:shadow-glow"
+                className="inline-flex items-center gap-2 bg-[#FF6B35] hover:bg-[#E85520] text-white font-semibold py-2.5 px-5 rounded-lg transition-all hover:shadow-[0_0_20px_rgba(255,107,53,0.3)] hover:-translate-y-0.5"
               >
                 <Send className="h-4 w-4" />
                 Nova Campanha
@@ -89,17 +94,22 @@ export default function DashboardPage() {
             </CardContent>
           </Card>
 
-          <Card className="hover:shadow-card-hover transition-shadow duration-300">
+          <Card className="hover:shadow-card-hover transition-shadow duration-300 group">
             <CardHeader>
-              <CardTitle className="font-display">Importar Lista</CardTitle>
+              <CardTitle className="font-display flex items-center gap-2">
+                <div className="p-2 rounded-lg bg-mint/10 group-hover:bg-mint/20 transition-colors">
+                  <Users className="h-5 w-5 text-mint" />
+                </div>
+                Importar Lista
+              </CardTitle>
             </CardHeader>
             <CardContent>
               <p className="text-muted-foreground mb-4">
-                Faça upload de uma planilha com seus contatos.
+                Faca upload de uma planilha com seus contatos.
               </p>
               <a
                 href="/lists"
-                className="inline-flex items-center gap-2 border-2 border-[#FF6B35] text-[#FF6B35] hover:bg-[#FF6B35] hover:text-white font-semibold py-2.5 px-5 rounded-lg transition-all"
+                className="inline-flex items-center gap-2 border-2 border-[#FF6B35] text-[#FF6B35] hover:bg-[#FF6B35] hover:text-white font-semibold py-2.5 px-5 rounded-lg transition-all hover:-translate-y-0.5"
               >
                 <Users className="h-4 w-4" />
                 Gerenciar Listas

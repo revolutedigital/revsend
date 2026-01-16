@@ -9,7 +9,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { WhatsAppManager } from "@/components/settings/WhatsAppManager";
 import { WebhookManager } from "@/components/settings/WebhookManager";
-import { Smartphone, Key, User, Loader2, CheckCircle2, Webhook } from "lucide-react";
+import { ThemeToggle } from "@/components/ui/theme-toggle";
+import { Smartphone, Key, User, Loader2, CheckCircle2, Webhook, Palette } from "lucide-react";
 
 export default function SettingsPage() {
   const { data: session, update } = useSession();
@@ -131,15 +132,39 @@ export default function SettingsPage() {
           </CardContent>
         </Card>
 
+        {/* Aparencia */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Palette className="h-5 w-5 text-[#FF6B35]" />
+              Aparencia
+            </CardTitle>
+            <CardDescription>
+              Personalize a aparencia do sistema
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="font-medium">Tema</p>
+                <p className="text-sm text-muted-foreground">
+                  Escolha entre tema claro, escuro ou automatico
+                </p>
+              </div>
+              <ThemeToggle />
+            </div>
+          </CardContent>
+        </Card>
+
         {/* Account */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <User className="h-5 w-5 text-orange" />
+              <User className="h-5 w-5 text-[#FF6B35]" />
               Conta
             </CardTitle>
             <CardDescription>
-              Gerencie suas informações pessoais
+              Gerencie suas informacoes pessoais
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -162,22 +187,16 @@ export default function SettingsPage() {
                 className="bg-muted"
               />
               <p className="text-xs text-muted-foreground">
-                O email não pode ser alterado
+                O email nao pode ser alterado
               </p>
             </div>
             <Button
               variant="outline"
               onClick={handleSaveProfile}
-              disabled={savingProfile}
+              isLoading={savingProfile}
+              loadingText="Salvando..."
             >
-              {savingProfile ? (
-                <>
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  Salvando...
-                </>
-              ) : (
-                "Atualizar Perfil"
-              )}
+              Atualizar Perfil
             </Button>
           </CardContent>
         </Card>
