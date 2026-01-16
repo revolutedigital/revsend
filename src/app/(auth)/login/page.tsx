@@ -44,28 +44,28 @@ export default function LoginPage() {
   };
 
   return (
-    <Card className="w-full max-w-md">
+    <Card className="w-full border-navy-400/30 bg-navy-600/50 backdrop-blur-sm shadow-2xl">
       <CardHeader className="text-center">
         <div className="flex justify-center mb-4">
-          <RevSendLogo className="w-16 h-16" />
+          <RevSendLogo className="w-20 h-20 hover-lift" />
         </div>
-        <CardTitle className="text-2xl">
-          Entrar no <span className="text-orange">RevSend</span>
+        <CardTitle className="text-2xl font-display text-white">
+          Entrar no <span className="text-coral">RevSend</span>
         </CardTitle>
-        <CardDescription>
+        <CardDescription className="text-navy-200">
           Entre com suas credenciais para acessar sua conta
         </CardDescription>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
           {error && (
-            <div className="bg-destructive/10 text-destructive text-sm p-3 rounded-md">
+            <div className="bg-destructive/10 text-destructive text-sm p-3 rounded-lg border border-destructive/20">
               {error}
             </div>
           )}
 
           <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
+            <Label htmlFor="email" className="text-navy-100">Email</Label>
             <Input
               id="email"
               type="email"
@@ -73,11 +73,12 @@ export default function LoginPage() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
+              className="bg-navy-500/50 border-navy-400/50 focus:border-coral focus:ring-coral/30 placeholder:text-navy-300 text-white"
             />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="password">Senha</Label>
+            <Label htmlFor="password" className="text-navy-100">Senha</Label>
             <Input
               id="password"
               type="password"
@@ -85,13 +86,13 @@ export default function LoginPage() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
+              className="bg-navy-500/50 border-navy-400/50 focus:border-coral focus:ring-coral/30 placeholder:text-navy-300 text-white"
             />
           </div>
 
           <Button
             type="submit"
-            variant="orange"
-            className="w-full"
+            className="w-full btn-primary"
             disabled={loading}
           >
             {loading ? (
@@ -104,9 +105,9 @@ export default function LoginPage() {
             )}
           </Button>
 
-          <p className="text-center text-sm text-muted-foreground">
+          <p className="text-center text-sm text-navy-200">
             Não tem uma conta?{" "}
-            <Link href="/register" className="text-orange hover:underline">
+            <Link href="/register" className="text-coral hover:text-coral-400 transition-colors font-medium">
               Criar conta
             </Link>
           </p>

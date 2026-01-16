@@ -2,6 +2,7 @@ interface RevSendLogoProps {
   className?: string;
 }
 
+// Logo principal - Conceito: Ondas de propagação formando movimento
 export function RevSendLogo({ className = "w-24 h-24" }: RevSendLogoProps) {
   return (
     <svg
@@ -10,64 +11,80 @@ export function RevSendLogo({ className = "w-24 h-24" }: RevSendLogoProps) {
       xmlns="http://www.w3.org/2000/svg"
       className={className}
     >
-      {/* Fundo circular */}
-      <circle cx="60" cy="60" r="56" fill="#101820" stroke="#ff7336" strokeWidth="2" />
+      {/* Fundo com gradiente sutil */}
+      <defs>
+        <linearGradient id="bgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="#0A1628" />
+          <stop offset="100%" stopColor="#0F1E32" />
+        </linearGradient>
+        <linearGradient id="accentGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="#FF6B35" />
+          <stop offset="100%" stopColor="#FF8F5C" />
+        </linearGradient>
+        <linearGradient id="waveGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+          <stop offset="0%" stopColor="#FF6B35" stopOpacity="0.2" />
+          <stop offset="50%" stopColor="#FF6B35" stopOpacity="0.6" />
+          <stop offset="100%" stopColor="#FF6B35" stopOpacity="0.2" />
+        </linearGradient>
+      </defs>
 
-      {/* Foguete - corpo principal */}
+      {/* Base circular */}
+      <circle cx="60" cy="60" r="56" fill="url(#bgGradient)" />
+
+      {/* Ondas de propagação - representam mensagens sendo enviadas */}
       <path
-        d="M60 20C60 20 45 40 45 65C45 80 52 90 60 95C68 90 75 80 75 65C75 40 60 20 60 20Z"
-        fill="#ff7336"
+        d="M35 60C35 46.2 46.2 35 60 35"
+        stroke="url(#waveGradient)"
+        strokeWidth="3"
+        strokeLinecap="round"
+        fill="none"
+        opacity="0.4"
+      />
+      <path
+        d="M28 60C28 42.3 42.3 28 60 28"
+        stroke="url(#waveGradient)"
+        strokeWidth="2.5"
+        strokeLinecap="round"
+        fill="none"
+        opacity="0.25"
+      />
+      <path
+        d="M21 60C21 38.5 38.5 21 60 21"
+        stroke="url(#waveGradient)"
+        strokeWidth="2"
+        strokeLinecap="round"
+        fill="none"
+        opacity="0.15"
       />
 
-      {/* Foguete - janela */}
-      <circle cx="60" cy="50" r="8" fill="#101820" />
-      <circle cx="60" cy="50" r="5" fill="#ffffff" opacity="0.9" />
-
-      {/* Foguete - asas laterais */}
+      {/* Seta dinâmica - representa envio/disparo */}
       <path
-        d="M45 70L32 85C32 85 38 88 45 85V70Z"
-        fill="#ff7336"
-      />
-      <path
-        d="M75 70L88 85C88 85 82 88 75 85V70Z"
-        fill="#ff7336"
+        d="M45 75L60 45L75 60L60 55L55 70L45 75Z"
+        fill="url(#accentGradient)"
       />
 
-      {/* Foguete - chamas */}
-      <path
-        d="M52 95C52 95 56 105 60 110C64 105 68 95 68 95C68 95 64 100 60 100C56 100 52 95 52 95Z"
-        fill="#ff7336"
-        opacity="0.8"
+      {/* Ponto de origem - representa a fonte */}
+      <circle cx="60" cy="60" r="8" fill="#FF6B35" />
+      <circle cx="60" cy="60" r="4" fill="#0A1628" />
+
+      {/* Destaque de ação - pequeno brilho */}
+      <circle cx="72" cy="48" r="3" fill="#00D9A5" opacity="0.9" />
+
+      {/* Anel externo sutil */}
+      <circle
+        cx="60"
+        cy="60"
+        r="55"
+        stroke="#FF6B35"
+        strokeWidth="1"
+        fill="none"
+        opacity="0.3"
       />
-      <path
-        d="M55 95C55 95 58 102 60 105C62 102 65 95 65 95C65 95 62 98 60 98C58 98 55 95 55 95Z"
-        fill="#ffffff"
-        opacity="0.9"
-      />
-
-      {/* Ícone de mensagem/chat no foguete */}
-      <path
-        d="M52 62H68C69.1 62 70 62.9 70 64V72C70 73.1 69.1 74 68 74H62L58 78L58 74H52C50.9 74 50 73.1 50 72V64C50 62.9 50.9 62 52 62Z"
-        fill="#101820"
-      />
-
-      {/* Pontos de mensagem */}
-      <circle cx="56" cy="68" r="1.5" fill="#ff7336" />
-      <circle cx="60" cy="68" r="1.5" fill="#ff7336" />
-      <circle cx="64" cy="68" r="1.5" fill="#ff7336" />
-
-      {/* Efeito de velocidade - linhas */}
-      <path d="M30 45L20 42" stroke="#ff7336" strokeWidth="2" strokeLinecap="round" opacity="0.6" />
-      <path d="M28 55L18 55" stroke="#ff7336" strokeWidth="2" strokeLinecap="round" opacity="0.6" />
-      <path d="M30 65L20 68" stroke="#ff7336" strokeWidth="2" strokeLinecap="round" opacity="0.6" />
-
-      <path d="M90 45L100 42" stroke="#ff7336" strokeWidth="2" strokeLinecap="round" opacity="0.6" />
-      <path d="M92 55L102 55" stroke="#ff7336" strokeWidth="2" strokeLinecap="round" opacity="0.6" />
-      <path d="M90 65L100 68" stroke="#ff7336" strokeWidth="2" strokeLinecap="round" opacity="0.6" />
     </svg>
   );
 }
 
+// Logo compacto para sidebar e favicon
 export function RevSendLogoCompact({ className = "w-10 h-10" }: RevSendLogoProps) {
   return (
     <svg
@@ -76,23 +93,60 @@ export function RevSendLogoCompact({ className = "w-10 h-10" }: RevSendLogoProps
       xmlns="http://www.w3.org/2000/svg"
       className={className}
     >
-      {/* Foguete simplificado */}
+      <defs>
+        <linearGradient id="compactGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="#FF6B35" />
+          <stop offset="100%" stopColor="#FF8F5C" />
+        </linearGradient>
+      </defs>
+
+      {/* Base */}
+      <circle cx="20" cy="20" r="18" fill="#0A1628" />
+
+      {/* Onda única */}
       <path
-        d="M20 4C20 4 12 14 12 24C12 32 16 36 20 38C24 36 28 32 28 24C28 14 20 4 20 4Z"
-        fill="#ff7336"
+        d="M12 20C12 15.6 15.6 12 20 12"
+        stroke="#FF6B35"
+        strokeWidth="2"
+        strokeLinecap="round"
+        fill="none"
+        opacity="0.4"
       />
 
-      {/* Janela */}
-      <circle cx="20" cy="16" r="3" fill="#101820" />
+      {/* Seta simplificada */}
+      <path
+        d="M15 26L20 14L28 22L20 19L17 24L15 26Z"
+        fill="url(#compactGradient)"
+      />
 
-      {/* Balão de mensagem */}
-      <rect x="15" y="22" width="10" height="6" rx="1" fill="#101820" />
-      <circle cx="17.5" cy="25" r="0.8" fill="#ff7336" />
-      <circle cx="20" cy="25" r="0.8" fill="#ff7336" />
-      <circle cx="22.5" cy="25" r="0.8" fill="#ff7336" />
+      {/* Centro */}
+      <circle cx="20" cy="20" r="3" fill="#FF6B35" />
 
-      {/* Chamas */}
-      <ellipse cx="20" cy="38" rx="3" ry="2" fill="#ff7336" opacity="0.7" />
+      {/* Destaque */}
+      <circle cx="26" cy="15" r="2" fill="#00D9A5" />
     </svg>
+  );
+}
+
+// Logo horizontal com texto
+export function RevSendLogoFull({ className = "h-10" }: RevSendLogoProps) {
+  return (
+    <div className={`flex items-center gap-3 ${className}`}>
+      <RevSendLogoCompact className="w-10 h-10" />
+      <span className="font-display text-2xl font-bold tracking-tight">
+        <span className="text-white">Rev</span>
+        <span className="text-coral">Send</span>
+      </span>
+    </div>
+  );
+}
+
+// Wordmark apenas (sem ícone)
+export function RevSendWordmark({ className = "" }: RevSendLogoProps) {
+  return (
+    <span className={`font-display font-bold tracking-tight inline-flex ${className}`}>
+      <span className="text-white">Rev</span>
+      <span className="text-coral">Send</span>
+    </span>
   );
 }

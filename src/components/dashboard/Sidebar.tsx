@@ -64,18 +64,21 @@ export function Sidebar() {
   const pathname = usePathname();
 
   return (
-    <aside className="fixed left-0 top-0 z-40 h-screen w-64 bg-navy border-r border-navy-400">
-      <div className="flex h-full flex-col">
+    <aside className="fixed left-0 top-0 z-40 h-screen w-64 bg-navy border-r border-navy-400/30">
+      {/* Decorative gradient */}
+      <div className="absolute top-0 left-0 w-full h-32 bg-gradient-to-b from-coral/5 to-transparent pointer-events-none" />
+
+      <div className="relative flex h-full flex-col">
         {/* Logo */}
-        <div className="flex items-center gap-3 px-6 py-5 border-b border-navy-400">
+        <div className="flex items-center gap-3 px-6 py-5 border-b border-navy-400/30">
           <RevSendLogoCompact className="w-10 h-10" />
-          <span className="text-xl font-bold text-white">
-            Rev<span className="text-orange">Send</span>
+          <span className="text-xl font-display font-bold text-white">
+            Rev<span className="text-coral">Send</span>
           </span>
         </div>
 
         {/* Menu */}
-        <nav className="flex-1 px-4 py-6 space-y-2">
+        <nav className="flex-1 px-3 py-6 space-y-1">
           {menuItems.map((item) => {
             const isActive = pathname === item.href ||
               (item.href !== "/dashboard" && pathname.startsWith(item.href));
@@ -85,24 +88,38 @@ export function Sidebar() {
                 key={item.href}
                 href={item.href}
                 className={cn(
-                  "flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors",
+                  "group flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200",
                   isActive
-                    ? "bg-orange text-white"
-                    : "text-gray-400 hover:bg-navy-400 hover:text-white"
+                    ? "bg-coral text-white shadow-glow"
+                    : "text-navy-200 hover:bg-navy-400/50 hover:text-white"
                 )}
               >
-                <item.icon className="h-5 w-5" />
+                <item.icon className={cn(
+                  "h-5 w-5 transition-transform duration-200",
+                  !isActive && "group-hover:scale-110"
+                )} />
                 {item.label}
+                {isActive && (
+                  <div className="ml-auto w-1.5 h-1.5 bg-white rounded-full animate-pulse" />
+                )}
               </Link>
             );
           })}
         </nav>
 
+        {/* Status indicator */}
+        <div className="mx-4 mb-4 p-3 bg-navy-400/30 rounded-lg">
+          <div className="flex items-center gap-2 text-xs text-navy-200">
+            <div className="w-2 h-2 bg-mint rounded-full animate-pulse" />
+            <span>Sistema operacional</span>
+          </div>
+        </div>
+
         {/* Logout */}
-        <div className="px-4 py-4 border-t border-navy-400">
+        <div className="px-3 py-4 border-t border-navy-400/30">
           <button
             onClick={() => signOut({ callbackUrl: "/" })}
-            className="flex w-full items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-400 hover:bg-navy-400 hover:text-white transition-colors"
+            className="flex w-full items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-navy-200 hover:bg-destructive/10 hover:text-destructive transition-all duration-200"
           >
             <LogOut className="h-5 w-5" />
             Sair

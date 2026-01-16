@@ -1,12 +1,26 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { Space_Grotesk, DM_Sans } from "next/font/google";
 import "./globals.css";
 
-const inter = Inter({ subsets: ["latin"] });
+// Fonte display para títulos - geométrica com personalidade
+const spaceGrotesk = Space_Grotesk({
+  subsets: ["latin"],
+  weight: ["500", "600", "700"],
+  variable: "--font-display",
+  display: "swap",
+});
+
+// Fonte body para legibilidade
+const dmSans = DM_Sans({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+  variable: "--font-body",
+  display: "swap",
+});
 
 export const metadata: Metadata = {
-  title: "RevSend - Prospecção Ativa via WhatsApp",
-  description: "Sistema de disparo de mensagens em massa para prospecção ativa",
+  title: "RevSend - Prospecção que Converte",
+  description: "Dispare mensagens no WhatsApp sem bloqueios. Prospecção ativa inteligente.",
 };
 
 export default function RootLayout({
@@ -15,8 +29,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="pt-BR">
-      <body className={inter.className}>{children}</body>
+    <html lang="pt-BR" className={`${spaceGrotesk.variable} ${dmSans.variable}`}>
+      <body className="font-body antialiased">{children}</body>
     </html>
   );
 }

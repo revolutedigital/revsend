@@ -18,8 +18,10 @@ export default async function DashboardLayout({
     <SessionProvider session={session}>
       <div className="min-h-screen bg-background">
         <Sidebar />
-        <main className="ml-64">
-          {children}
+        <main className="ml-64 animate-fade-in">
+          <div className="min-h-screen">
+            {children}
+          </div>
         </main>
       </div>
     </SessionProvider>

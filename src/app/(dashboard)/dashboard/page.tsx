@@ -8,32 +8,32 @@ const stats = [
     value: "0",
     description: "Total de mensagens",
     icon: Send,
-    color: "text-orange",
-    bgColor: "bg-orange/10",
+    color: "text-coral",
+    bgColor: "bg-coral/10",
   },
   {
     title: "Contatos",
     value: "0",
     description: "Em todas as listas",
     icon: Users,
-    color: "text-blue-500",
-    bgColor: "bg-blue-500/10",
+    color: "text-navy-300",
+    bgColor: "bg-navy-400/20",
   },
   {
     title: "Respostas",
     value: "0",
     description: "Total de retornos",
     icon: MessageSquare,
-    color: "text-green-500",
-    bgColor: "bg-green-500/10",
+    color: "text-mint",
+    bgColor: "bg-mint/10",
   },
   {
     title: "Taxa de Resposta",
     value: "0%",
     description: "Média geral",
     icon: TrendingUp,
-    color: "text-purple-500",
-    bgColor: "bg-purple-500/10",
+    color: "text-gold",
+    bgColor: "bg-gold/10",
   },
 ];
 
@@ -70,9 +70,9 @@ export default function DashboardPage() {
 
         {/* Quick Actions */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <Card>
+          <Card className="hover:shadow-card-hover transition-shadow duration-300">
             <CardHeader>
-              <CardTitle>Iniciar Nova Campanha</CardTitle>
+              <CardTitle className="font-display">Iniciar Nova Campanha</CardTitle>
             </CardHeader>
             <CardContent>
               <p className="text-muted-foreground mb-4">
@@ -80,7 +80,7 @@ export default function DashboardPage() {
               </p>
               <a
                 href="/campaigns/new"
-                className="inline-flex items-center gap-2 bg-orange hover:bg-orange-600 text-white font-semibold py-2 px-4 rounded-lg transition-colors"
+                className="btn-primary inline-flex items-center gap-2"
               >
                 <Send className="h-4 w-4" />
                 Nova Campanha
@@ -88,9 +88,9 @@ export default function DashboardPage() {
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="hover:shadow-card-hover transition-shadow duration-300">
             <CardHeader>
-              <CardTitle>Importar Lista</CardTitle>
+              <CardTitle className="font-display">Importar Lista</CardTitle>
             </CardHeader>
             <CardContent>
               <p className="text-muted-foreground mb-4">
@@ -98,7 +98,7 @@ export default function DashboardPage() {
               </p>
               <a
                 href="/lists"
-                className="inline-flex items-center gap-2 bg-navy hover:bg-navy-600 text-white font-semibold py-2 px-4 rounded-lg transition-colors"
+                className="btn-secondary inline-flex items-center gap-2"
               >
                 <Users className="h-4 w-4" />
                 Gerenciar Listas
