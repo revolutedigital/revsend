@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
@@ -253,6 +254,9 @@ export function WhatsAppManager() {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Adicionar WhatsApp</DialogTitle>
+            <DialogDescription>
+              Adicione um novo numero de WhatsApp para usar em suas campanhas.
+            </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 pt-4">
             <div className="space-y-2">
@@ -288,6 +292,9 @@ export function WhatsAppManager() {
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>Conectar WhatsApp</DialogTitle>
+            <DialogDescription>
+              Escaneie o QR Code com seu WhatsApp para conectar.
+            </DialogDescription>
           </DialogHeader>
           <div className="flex flex-col items-center py-6">
             {qrCode ? (

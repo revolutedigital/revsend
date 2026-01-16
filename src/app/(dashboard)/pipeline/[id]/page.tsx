@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useState, use } from "react";
-import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import { useRouter, useParams } from "next/navigation";
 import { Header } from "@/components/dashboard/Header";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,6 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
@@ -87,8 +88,9 @@ interface Deal {
   tasks: Task[];
 }
 
-export default function DealPage({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = use(params);
+export default function DealPage() {
+  const params = useParams();
+  const id = params.id as string;
   const router = useRouter();
   const [deal, setDeal] = useState<Deal | null>(null);
   const [stages, setStages] = useState<Stage[]>([]);
@@ -536,6 +538,9 @@ export default function DealPage({ params }: { params: Promise<{ id: string }> }
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Adicionar Atividade</DialogTitle>
+            <DialogDescription>
+              Registre uma nota, ligacao, mensagem ou email relacionado a este deal.
+            </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
             <div className="flex gap-2">
@@ -584,6 +589,9 @@ export default function DealPage({ params }: { params: Promise<{ id: string }> }
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Nova Tarefa</DialogTitle>
+            <DialogDescription>
+              Crie uma tarefa para acompanhar este deal.
+            </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
             <div className="space-y-2">

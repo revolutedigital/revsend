@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
@@ -215,6 +216,9 @@ export function WebhookManager() {
               <DialogTitle>
                 {editingWebhook ? "Editar Webhook" : "Novo Webhook"}
               </DialogTitle>
+              <DialogDescription>
+                Configure um webhook para receber notificacoes de eventos.
+              </DialogDescription>
             </DialogHeader>
             <div className="space-y-4 mt-4">
               <div className="space-y-2">

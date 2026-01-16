@@ -11,6 +11,7 @@ import { MediaUpload } from "@/components/campaigns/MediaUpload";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
@@ -433,6 +434,9 @@ export default function NewCampaignPage() {
                       <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
                         <DialogHeader>
                           <DialogTitle>Selecionar Template</DialogTitle>
+                          <DialogDescription>
+                            Escolha um template para usar como base da sua mensagem.
+                          </DialogDescription>
                         </DialogHeader>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-4">
                           {templates.map((template) => (

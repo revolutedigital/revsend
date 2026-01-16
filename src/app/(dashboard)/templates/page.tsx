@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
@@ -206,6 +207,9 @@ export default function TemplatesPage() {
                   <DialogTitle>
                     {editingTemplate ? "Editar Template" : "Novo Template"}
                   </DialogTitle>
+                  <DialogDescription>
+                    Crie um template de mensagem para reutilizar em suas campanhas.
+                  </DialogDescription>
                 </DialogHeader>
                 <div className="space-y-4 mt-4">
                   <div className="grid grid-cols-2 gap-4">
