@@ -1,27 +1,19 @@
 <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <defs>
-    <linearGradient id="fCoral" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#FF8F5C"/>
-      <stop offset="100%" stop-color="#FF6B35"/>
-    </linearGradient>
-    <linearGradient id="fMint" x1="0%" y1="100%" x2="100%" y2="0%">
-      <stop offset="0%" stop-color="#00B388"/>
-      <stop offset="100%" stop-color="#00D9A5"/>
-    </linearGradient>
-  </defs>
+  <!-- Fundo laranja solido - alta visibilidade -->
+  <circle cx="16" cy="16" r="15" fill="#FF6B35"/>
 
-  <!-- Base circular com borda coral -->
-  <circle cx="16" cy="16" r="14" fill="#1A2D4A" stroke="#FF6B35" stroke-width="2"/>
+  <!-- Ring interno branco para destaque -->
+  <circle cx="16" cy="16" r="12" fill="none" stroke="white" stroke-width="1" opacity="0.3"/>
 
-  <!-- Seta de envio -->
-  <path d="M8 16 L13 11 L13 14 L24 14 L24 18 L13 18 L13 21 L8 16Z" fill="url(#fCoral)"/>
+  <!-- Seta de envio - branca para contraste maximo -->
+  <path d="M8 16 L13 11 L13 14 L22 14 L22 18 L13 18 L13 21 L8 16Z" fill="white"/>
 
-  <!-- Rastros -->
-  <path d="M4 14 L9 14" stroke="#FF6B35" stroke-width="1.5" stroke-linecap="round" opacity="0.7"/>
-  <path d="M3 16 L8 16" stroke="#FF6B35" stroke-width="2" stroke-linecap="round"/>
-  <path d="M4 18 L9 18" stroke="#FF6B35" stroke-width="1.5" stroke-linecap="round" opacity="0.7"/>
+  <!-- Linhas de velocidade - brancas -->
+  <path d="M5 13 L9 13" stroke="white" stroke-width="1.5" stroke-linecap="round" opacity="0.7"/>
+  <path d="M3 16 L7 16" stroke="white" stroke-width="2" stroke-linecap="round" opacity="0.9"/>
+  <path d="M5 19 L9 19" stroke="white" stroke-width="1.5" stroke-linecap="round" opacity="0.7"/>
 
-  <!-- Destino mint -->
-  <circle cx="22" cy="16" r="2.5" fill="url(#fMint)"/>
-  <circle cx="22" cy="16" r="1" fill="white" opacity="0.9"/>
+  <!-- Ponto de destino mint -->
+  <circle cx="24" cy="16" r="3" fill="#00D9A5"/>
+  <circle cx="24" cy="16" r="1.2" fill="white"/>
 </svg>

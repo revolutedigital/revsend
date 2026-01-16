@@ -25,11 +25,7 @@ export const metadata: Metadata = {
   keywords: ["whatsapp", "prospecao", "vendas", "disparo em massa", "marketing"],
   authors: [{ name: "RevSend" }],
   icons: {
-    icon: [
-      { url: "/favicon.ico", sizes: "any" },
-      { url: "/icon.svg", type: "image/svg+xml" },
-    ],
-    apple: "/apple-touch-icon.png",
+    icon: { url: "/icon.svg", type: "image/svg+xml" },
   },
   openGraph: {
     title: "RevSend - Prospecao que Converte",

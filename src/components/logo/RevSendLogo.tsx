@@ -79,32 +79,35 @@ export function RevSendLogoCompact({ className = "w-10 h-10" }: RevSendLogoProps
     >
       <defs>
         <linearGradient id="compactCoral" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stopColor="#FF8F5C" />
+          <stop offset="0%" stopColor="#FF9A6C" />
           <stop offset="100%" stopColor="#FF6B35" />
         </linearGradient>
         <linearGradient id="compactMint" x1="0%" y1="100%" x2="100%" y2="0%">
-          <stop offset="0%" stopColor="#00B388" />
-          <stop offset="100%" stopColor="#00D9A5" />
+          <stop offset="0%" stopColor="#00D9A5" />
+          <stop offset="100%" stopColor="#4FFFCB" />
         </linearGradient>
       </defs>
 
-      {/* Base circular com borda coral */}
-      <circle cx="20" cy="20" r="18" fill="#1A2D4A" stroke="#FF6B35" strokeWidth="2" />
+      {/* Fundo laranja solido - alta visibilidade */}
+      <circle cx="20" cy="20" r="18" fill="#FF6B35" />
 
-      {/* Foguete/seta estilizada - design mais bold e visivel */}
+      {/* Ring interno branco para destaque */}
+      <circle cx="20" cy="20" r="15" fill="none" stroke="white" strokeWidth="1.5" opacity="0.3" />
+
+      {/* Seta de envio - branca para contraste maximo */}
       <path
-        d="M10 20 L18 12 L18 16 L30 16 L30 24 L18 24 L18 28 L10 20Z"
-        fill="url(#compactCoral)"
+        d="M10 20 L17 13 L17 17 L28 17 L28 23 L17 23 L17 27 L10 20Z"
+        fill="white"
       />
 
-      {/* Rastros de velocidade */}
-      <path d="M6 17 L12 17" stroke="#FF6B35" strokeWidth="2" strokeLinecap="round" opacity="0.8" />
-      <path d="M4 20 L10 20" stroke="#FF6B35" strokeWidth="2.5" strokeLinecap="round" />
-      <path d="M6 23 L12 23" stroke="#FF6B35" strokeWidth="2" strokeLinecap="round" opacity="0.8" />
+      {/* Linhas de velocidade - brancas */}
+      <path d="M6 16 L11 16" stroke="white" strokeWidth="2" strokeLinecap="round" opacity="0.7" />
+      <path d="M4 20 L9 20" stroke="white" strokeWidth="2.5" strokeLinecap="round" opacity="0.9" />
+      <path d="M6 24 L11 24" stroke="white" strokeWidth="2" strokeLinecap="round" opacity="0.7" />
 
-      {/* Propulsao mint */}
-      <circle cx="28" cy="20" r="3" fill="url(#compactMint)" />
-      <circle cx="28" cy="20" r="1.5" fill="white" opacity="0.8" />
+      {/* Ponto de destino mint */}
+      <circle cx="30" cy="20" r="3.5" fill="#00D9A5" />
+      <circle cx="30" cy="20" r="1.5" fill="white" />
     </svg>
   );
 }
