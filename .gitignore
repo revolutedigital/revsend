@@ -39,3 +39,6 @@ next-env.d.ts
 
 # WhatsApp sessions
 /sessions
+
+# Playwright auth state
+tests/e2e/.auth/*.json
