@@ -1,8 +1,9 @@
-import { anthropic } from "./client";
+import { getAnthropicClient } from "./client";
 
 export async function generateMessageVariations(
   originalMessage: string,
-  count: number = 5
+  count: number = 5,
+  userId: string
 ): Promise<string[]> {
   const prompt = `Você é um especialista em copywriting para WhatsApp. Sua tarefa é criar ${count} variações da mensagem abaixo, mantendo o mesmo significado e objetivo, mas variando a forma de expressão.
 
@@ -28,6 +29,8 @@ Responda APENAS com um JSON válido no seguinte formato, sem nenhum texto adicio
 }`;
 
   try {
+    const anthropic = await getAnthropicClient(userId);
+
     const response = await anthropic.messages.create({
       model: "claude-3-haiku-20240307",
       max_tokens: 2048,
@@ -48,6 +51,9 @@ Responda APENAS com um JSON válido no seguinte formato, sem nenhum texto adicio
     return result.variations;
   } catch (error) {
     console.error("Erro ao gerar variações:", error);
+    if (error instanceof Error && error.message.includes("API key")) {
+      throw error;
+    }
     throw new Error("Não foi possível gerar variações. Verifique sua API key.");
   }
 }

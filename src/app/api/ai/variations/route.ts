@@ -25,13 +25,14 @@ export async function POST(request: Request) {
       );
     }
 
-    const variations = await generateMessageVariations(message, count);
+    const variations = await generateMessageVariations(message, count, session.user.id);
 
     return NextResponse.json({ variations });
   } catch (error) {
     console.error("Erro ao gerar variações:", error);
+    const errorMessage = error instanceof Error ? error.message : "Erro ao gerar variações. Verifique sua API key.";
     return NextResponse.json(
-      { error: "Erro ao gerar variações. Verifique sua API key." },
+      { error: errorMessage },
       { status: 500 }
     );
   }

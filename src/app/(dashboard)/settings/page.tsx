@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { Header } from "@/components/dashboard/Header";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -10,24 +10,58 @@ import { Label } from "@/components/ui/label";
 import { WhatsAppManager } from "@/components/settings/WhatsAppManager";
 import { WebhookManager } from "@/components/settings/WebhookManager";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
-import { Smartphone, Key, User, Loader2, CheckCircle2, Webhook, Palette } from "lucide-react";
+import { Smartphone, Key, User, Loader2, CheckCircle2, Webhook, Palette, AlertCircle } from "lucide-react";
 
 export default function SettingsPage() {
   const { data: session, update } = useSession();
   const [apiKey, setApiKey] = useState("");
+  const [hasApiKey, setHasApiKey] = useState(false);
   const [name, setName] = useState(session?.user?.name || "");
   const [savingApi, setSavingApi] = useState(false);
   const [savingProfile, setSavingProfile] = useState(false);
   const [apiSaved, setApiSaved] = useState(false);
+  const [apiError, setApiError] = useState("");
+
+  // Verificar se ja tem API key configurada
+  useEffect(() => {
+    fetch("/api/settings")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.hasAnthropicKey) {
+          setHasApiKey(true);
+        }
+      })
+      .catch(console.error);
+  }, []);
 
   const handleSaveApiKey = async () => {
+    if (!apiKey.trim()) return;
+
     setSavingApi(true);
-    // Em produção, salvar no banco de dados
-    // Por enquanto, apenas simula o salvamento
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-    setSavingApi(false);
-    setApiSaved(true);
-    setTimeout(() => setApiSaved(false), 3000);
+    setApiError("");
+
+    try {
+      const response = await fetch("/api/settings", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ anthropicApiKey: apiKey }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Erro ao salvar");
+      }
+
+      setApiSaved(true);
+      setHasApiKey(true);
+      setApiKey(""); // Limpa o campo apos salvar
+      setTimeout(() => setApiSaved(false), 3000);
+    } catch (error) {
+      setApiError(error instanceof Error ? error.message : "Erro ao salvar");
+    } finally {
+      setSavingApi(false);
+    }
   };
 
   const handleSaveProfile = async () => {
@@ -73,14 +107,26 @@ export default function SettingsPage() {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
+            {hasApiKey && (
+              <div className="flex items-center gap-2 p-3 bg-green-500/10 border border-green-500/20 rounded-lg">
+                <CheckCircle2 className="h-4 w-4 text-green-500" />
+                <span className="text-sm text-green-600 dark:text-green-400">
+                  API key configurada. Digite uma nova chave para substituir.
+                </span>
+              </div>
+            )}
+
             <div className="space-y-2">
               <Label htmlFor="apiKey">Chave da API Anthropic</Label>
               <Input
                 id="apiKey"
                 type="password"
-                placeholder="sk-ant-..."
+                placeholder={hasApiKey ? "••••••••••••••••" : "sk-ant-..."}
                 value={apiKey}
-                onChange={(e) => setApiKey(e.target.value)}
+                onChange={(e) => {
+                  setApiKey(e.target.value);
+                  setApiError("");
+                }}
               />
               <p className="text-xs text-muted-foreground">
                 Obtenha sua chave em{" "}
@@ -94,6 +140,14 @@ export default function SettingsPage() {
                 </a>
               </p>
             </div>
+
+            {apiError && (
+              <div className="flex items-center gap-2 p-3 bg-red-500/10 border border-red-500/20 rounded-lg">
+                <AlertCircle className="h-4 w-4 text-red-500" />
+                <span className="text-sm text-red-600 dark:text-red-400">{apiError}</span>
+              </div>
+            )}
+
             <Button
               variant="outline"
               onClick={handleSaveApiKey}
@@ -110,7 +164,7 @@ export default function SettingsPage() {
                   Salvo!
                 </>
               ) : (
-                "Salvar"
+                "Salvar API Key"
               )}
             </Button>
           </CardContent>
