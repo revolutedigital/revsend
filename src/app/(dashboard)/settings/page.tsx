@@ -10,7 +10,8 @@ import { Label } from "@/components/ui/label";
 import { WhatsAppManager } from "@/components/settings/WhatsAppManager";
 import { WebhookManager } from "@/components/settings/WebhookManager";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
-import { Smartphone, Key, User, Loader2, CheckCircle2, Webhook, Palette, AlertCircle } from "lucide-react";
+import { TwoFactorSetup } from "@/components/auth/two-factor-setup";
+import { Smartphone, Key, User, Loader2, CheckCircle2, Webhook, Palette, AlertCircle, Shield } from "lucide-react";
 
 export default function SettingsPage() {
   const { data: session, update } = useSession();
@@ -21,14 +22,21 @@ export default function SettingsPage() {
   const [savingProfile, setSavingProfile] = useState(false);
   const [apiSaved, setApiSaved] = useState(false);
   const [apiError, setApiError] = useState("");
+  const [twoFactorEnabled, setTwoFactorEnabled] = useState(false);
+  const [twoFactorSetupOpen, setTwoFactorSetupOpen] = useState(false);
+  const [disabling2FA, setDisabling2FA] = useState(false);
+  const [password, setPassword] = useState("");
 
-  // Verificar se ja tem API key configurada
+  // Verificar se ja tem API key configurada e status 2FA
   useEffect(() => {
     fetch("/api/settings")
       .then((res) => res.json())
       .then((data) => {
         if (data.hasAnthropicKey) {
           setHasApiKey(true);
+        }
+        if (data.twoFactorEnabled) {
+          setTwoFactorEnabled(true);
         }
       })
       .catch(console.error);
@@ -69,6 +77,39 @@ export default function SettingsPage() {
     // TODO: Implementar atualização de perfil
     await new Promise((resolve) => setTimeout(resolve, 1000));
     setSavingProfile(false);
+  };
+
+  const handleDisable2FA = async () => {
+    if (!password) {
+      alert("Digite sua senha para desativar o 2FA");
+      return;
+    }
+
+    setDisabling2FA(true);
+
+    try {
+      const response = await fetch("/api/auth/2fa/disable", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ password }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Falha ao desativar 2FA");
+      }
+
+      setTwoFactorEnabled(false);
+      setPassword("");
+      alert("2FA desativado com sucesso!");
+    } catch (error) {
+      alert("Erro ao desativar 2FA. Verifique sua senha.");
+    } finally {
+      setDisabling2FA(false);
+    }
+  };
+
+  const handle2FASuccess = () => {
+    setTwoFactorEnabled(true);
   };
 
   return (
@@ -254,7 +295,78 @@ export default function SettingsPage() {
             </Button>
           </CardContent>
         </Card>
+
+        {/* Security - 2FA */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Shield className="h-5 w-5 text-orange" />
+              Segurança
+            </CardTitle>
+            <CardDescription>
+              Configure a autenticação de dois fatores para proteger sua conta
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex items-center justify-between p-4 border rounded-lg">
+              <div className="space-y-1">
+                <p className="font-medium">Autenticação de Dois Fatores (2FA)</p>
+                <p className="text-sm text-muted-foreground">
+                  {twoFactorEnabled
+                    ? "2FA está ativado. Sua conta está protegida."
+                    : "Adicione uma camada extra de segurança à sua conta"}
+                </p>
+              </div>
+              <div className="flex items-center gap-2">
+                {twoFactorEnabled ? (
+                  <CheckCircle2 className="h-5 w-5 text-green-500" />
+                ) : (
+                  <AlertCircle className="h-5 w-5 text-yellow-500" />
+                )}
+              </div>
+            </div>
+
+            {!twoFactorEnabled ? (
+              <Button onClick={() => setTwoFactorSetupOpen(true)} variant="outline">
+                Ativar 2FA
+              </Button>
+            ) : (
+              <div className="space-y-3">
+                <div className="space-y-2">
+                  <Label htmlFor="password">Senha (para desativar 2FA)</Label>
+                  <Input
+                    id="password"
+                    type="password"
+                    placeholder="Digite sua senha"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                  />
+                </div>
+                <Button
+                  variant="destructive"
+                  onClick={handleDisable2FA}
+                  disabled={disabling2FA || !password}
+                >
+                  {disabling2FA ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Desativando...
+                    </>
+                  ) : (
+                    "Desativar 2FA"
+                  )}
+                </Button>
+              </div>
+            )}
+          </CardContent>
+        </Card>
       </div>
+
+      <TwoFactorSetup
+        open={twoFactorSetupOpen}
+        onOpenChange={setTwoFactorSetupOpen}
+        onSuccess={handle2FASuccess}
+      />
     </>
   );
 }

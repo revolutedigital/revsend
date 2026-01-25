@@ -18,8 +18,16 @@ export async function GET() {
       },
     });
 
+    const user = await db.user.findUnique({
+      where: { id: session.user.id },
+      select: {
+        twoFactorEnabled: true,
+      },
+    });
+
     return NextResponse.json({
       hasAnthropicKey: !!settings?.anthropicApiKey,
+      twoFactorEnabled: user?.twoFactorEnabled || false,
       // Nao retorna a key completa por seguranca, apenas se existe
     });
   } catch (error) {
