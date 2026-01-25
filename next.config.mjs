@@ -6,6 +6,33 @@ const nextConfig = {
     serverComponentsExternalPackages: ['@whiskeysockets/baileys'],
   },
 
+  // Performance optimizations
+  compiler: {
+    removeConsole: process.env.NODE_ENV === 'production',
+  },
+
+  // Image optimization
+  images: {
+    formats: ['image/avif', 'image/webp'],
+    minimumCacheTTL: 60,
+  },
+
+  // Compression
+  compress: true,
+
+  // Power bundle analyzer em desenvolvimento
+  webpack: (config, { dev, isServer }) => {
+    // Tree shaking
+    if (!dev && !isServer) {
+      config.optimization = {
+        ...config.optimization,
+        usedExports: true,
+      }
+    }
+
+    return config
+  },
+
   // Sentry source maps upload
   sentry: {
     hideSourceMaps: true,
