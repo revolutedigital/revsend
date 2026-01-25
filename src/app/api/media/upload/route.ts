@@ -1,130 +1,97 @@
-import { NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
-import { db } from "@/lib/db";
-import { writeFile, mkdir } from "fs/promises";
-import { existsSync } from "fs";
-import path from "path";
-import { randomUUID } from "crypto";
+import { NextRequest, NextResponse } from 'next/server'
+import { auth } from '@/lib/auth'
+import { uploadMedia, MediaType } from '@/lib/storage/media-upload'
+import { rateLimit } from '@/lib/rate-limit'
+import { listUserMedia } from '@/lib/storage/media-upload'
 
-const UPLOAD_DIR = path.join(process.cwd(), "public", "uploads");
-const MAX_FILE_SIZE = 16 * 1024 * 1024; // 16MB
+export const runtime = 'nodejs'
+export const maxDuration = 60
 
-const ALLOWED_TYPES: Record<string, string[]> = {
-  image: ["image/jpeg", "image/png", "image/gif", "image/webp"],
-  audio: ["audio/mpeg", "audio/ogg", "audio/wav", "audio/mp4", "audio/aac"],
-  video: ["video/mp4", "video/webm", "video/quicktime"],
-};
-
-function getMediaType(mimeType: string): string | null {
-  for (const [type, mimes] of Object.entries(ALLOWED_TYPES)) {
-    if (mimes.includes(mimeType)) {
-      return type;
-    }
-  }
-  return null;
-}
-
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
   try {
-    const session = await auth();
+    // Check authentication
+    const session = await auth()
     if (!session?.user?.id) {
-      return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
+      return NextResponse.json({ error: 'Não autorizado' }, { status: 401 })
     }
 
-    const formData = await request.formData();
-    const file = formData.get("file") as File | null;
+    // Rate limiting
+    const rateLimitResult = await rateLimit(request, 'FILE_UPLOAD')
+    if (!rateLimitResult.success) {
+      return NextResponse.json(
+        { error: 'Muitas requisições. Tente novamente em alguns minutos.' },
+        { status: 429 }
+      )
+    }
+
+    // Parse form data
+    const formData = await request.formData()
+    const file = formData.get('file') as File | null
+    const type = formData.get('type') as MediaType | null
 
     if (!file) {
-      return NextResponse.json(
-        { error: "Nenhum arquivo enviado" },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'Arquivo não fornecido' }, { status: 400 })
     }
 
-    // Validar tamanho
-    if (file.size > MAX_FILE_SIZE) {
-      return NextResponse.json(
-        { error: "Arquivo muito grande. Máximo: 16MB" },
-        { status: 400 }
-      );
+    if (!type || !['image', 'audio', 'video'].includes(type)) {
+      return NextResponse.json({ error: 'Tipo de mídia inválido' }, { status: 400 })
     }
 
-    // Validar tipo
-    const mediaType = getMediaType(file.type);
-    if (!mediaType) {
-      return NextResponse.json(
-        { error: "Tipo de arquivo não permitido" },
-        { status: 400 }
-      );
-    }
+    // Convert file to buffer
+    const arrayBuffer = await file.arrayBuffer()
+    const buffer = Buffer.from(arrayBuffer)
 
-    // Criar diretório se não existir
-    if (!existsSync(UPLOAD_DIR)) {
-      await mkdir(UPLOAD_DIR, { recursive: true });
-    }
-
-    // Gerar nome único
-    const ext = path.extname(file.name);
-    const filename = `${randomUUID()}${ext}`;
-    const filepath = path.join(UPLOAD_DIR, filename);
-
-    // Salvar arquivo
-    const bytes = await file.arrayBuffer();
-    const buffer = Buffer.from(bytes);
-    await writeFile(filepath, buffer);
-
-    // URL pública
-    const url = `/uploads/${filename}`;
-
-    // Salvar no banco
-    const mediaFile = await db.mediaFile.create({
-      data: {
-        userId: session.user.id,
-        filename,
-        originalName: file.name,
-        mimeType: file.type,
-        size: file.size,
-        url,
-      },
-    });
+    // Upload media to R2
+    const result = await uploadMedia({
+      userId: session.user.id,
+      file: buffer,
+      filename: file.name,
+      type,
+      originalMimeType: file.type,
+    })
 
     return NextResponse.json({
-      id: mediaFile.id,
-      url: mediaFile.url,
-      filename: mediaFile.filename,
-      originalName: mediaFile.originalName,
-      mimeType: mediaFile.mimeType,
-      mediaType,
-      size: mediaFile.size,
-    });
-  } catch (error) {
-    console.error("Erro ao fazer upload:", error);
+      id: result.mediaId,
+      url: result.url,
+      filename: file.name,
+      originalName: file.name,
+      mimeType: result.contentType,
+      mediaType: type,
+      size: result.size,
+    })
+  } catch (error: any) {
+    console.error('Media upload error:', error)
     return NextResponse.json(
-      { error: "Erro ao fazer upload do arquivo" },
+      { error: error.message || 'Erro ao fazer upload do arquivo' },
       { status: 500 }
-    );
+    )
   }
 }
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
-    const session = await auth();
+    // Check authentication
+    const session = await auth()
     if (!session?.user?.id) {
-      return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
+      return NextResponse.json({ error: 'Não autorizado' }, { status: 401 })
     }
 
-    const files = await db.mediaFile.findMany({
-      where: { userId: session.user.id },
-      orderBy: { createdAt: "desc" },
-      take: 50,
-    });
+    // Get query params
+    const searchParams = request.nextUrl.searchParams
+    const type = searchParams.get('type') as MediaType | null
 
-    return NextResponse.json({ files });
-  } catch (error) {
-    console.error("Erro ao listar arquivos:", error);
+    // List user media
+    const files = await listUserMedia(
+      session.user.id,
+      type || undefined
+    )
+
+    return NextResponse.json({ files })
+  } catch (error: any) {
+    console.error('Media list error:', error)
     return NextResponse.json(
-      { error: "Erro ao listar arquivos" },
+      { error: 'Erro ao listar arquivos' },
       { status: 500 }
-    );
+    )
   }
 }

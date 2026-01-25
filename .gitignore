@@ -42,3 +42,7 @@ next-env.d.ts
 
 # Playwright auth state
 tests/e2e/.auth/*.json
+
+# Playwright test results
+test-results/
+playwright-report/
