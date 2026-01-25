@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { Sidebar } from "@/components/dashboard/Sidebar";
 import { SessionProvider } from "@/components/providers/SessionProvider";
+import { CommandPalette } from "@/components/command-palette";
 
 export default async function DashboardLayout({
   children,
@@ -24,6 +25,7 @@ export default async function DashboardLayout({
             {children}
           </div>
         </main>
+        <CommandPalette />
       </div>
     </SessionProvider>
   );

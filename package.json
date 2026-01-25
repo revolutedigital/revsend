@@ -51,6 +51,7 @@
         "bullmq": "^5.66.5",
         "class-variance-authority": "^0.7.1",
         "clsx": "^2.1.1",
+        "cmdk": "^1.1.1",
         "eslint": "^9.39.2",
         "eslint-config-next": "^16.1.1",
         "ioredis": "^5.9.1",

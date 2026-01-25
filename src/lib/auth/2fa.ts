@@ -1,5 +1,6 @@
 import speakeasy from 'speakeasy'
 import QRCode from 'qrcode'
+import crypto from 'crypto'
 
 const APP_NAME = 'RevSend'
 
@@ -58,4 +59,44 @@ export function generateBackupCode(): string {
  */
 export function generateBackupCodes(count: number = 10): string[] {
   return Array.from({ length: count }, () => generateBackupCode())
+}
+
+/**
+ * Hash a backup code for secure storage
+ */
+export function hashBackupCode(code: string): string {
+  // Normalize the code (remove dashes, uppercase)
+  const normalizedCode = code.replace(/-/g, '').toUpperCase()
+  return crypto.createHash('sha256').update(normalizedCode).digest('hex')
+}
+
+/**
+ * Hash multiple backup codes for storage
+ */
+export function hashBackupCodes(codes: string[]): string[] {
+  return codes.map(hashBackupCode)
+}
+
+/**
+ * Verify a backup code against stored hashed codes
+ * Returns the index of the matched code, or -1 if not found
+ */
+export function verifyBackupCode(
+  inputCode: string,
+  hashedCodes: string[]
+): { valid: boolean; index: number } {
+  const hashedInput = hashBackupCode(inputCode)
+  const index = hashedCodes.findIndex((hashed) => hashed === hashedInput)
+  return {
+    valid: index !== -1,
+    index,
+  }
+}
+
+/**
+ * Format backup codes for display (add dashes)
+ */
+export function formatBackupCode(code: string): string {
+  const clean = code.replace(/-/g, '').toUpperCase()
+  return clean.match(/.{1,4}/g)?.join('-') || clean
 }

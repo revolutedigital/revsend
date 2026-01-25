@@ -1,5 +1,6 @@
-"use client"
+'use client'
 
+import { useState } from 'react'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -9,59 +10,83 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from "./alert-dialog"
+} from '@/components/ui/alert-dialog'
+import { Loader2, AlertTriangle, Trash2 } from 'lucide-react'
 
 interface ConfirmDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
-  onConfirm: () => void | Promise<void>
   title: string
   description: string
   confirmText?: string
   cancelText?: string
-  variant?: "danger" | "warning" | "info"
-  isLoading?: boolean
+  variant?: 'default' | 'destructive'
+  onConfirm: () => Promise<void> | void
+  loading?: boolean
 }
 
 export function ConfirmDialog({
   open,
   onOpenChange,
-  onConfirm,
   title,
   description,
-  confirmText = "Confirmar",
-  cancelText = "Cancelar",
-  variant = "danger",
-  isLoading = false,
+  confirmText = 'Confirmar',
+  cancelText = 'Cancelar',
+  variant = 'destructive',
+  onConfirm,
+  loading = false,
 }: ConfirmDialogProps) {
+  const [isLoading, setIsLoading] = useState(false)
+
   const handleConfirm = async () => {
-    await onConfirm()
-    onOpenChange(false)
+    setIsLoading(true)
+    try {
+      await onConfirm()
+      onOpenChange(false)
+    } finally {
+      setIsLoading(false)
+    }
   }
 
-  const variantStyles = {
-    danger: "bg-red-600 hover:bg-red-700 focus:ring-red-600",
-    warning: "bg-orange-600 hover:bg-orange-700 focus:ring-orange-600",
-    info: "bg-blue-600 hover:bg-blue-700 focus:ring-blue-600",
-  }
+  const isProcessing = loading || isLoading
 
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>{title}</AlertDialogTitle>
+          <AlertDialogTitle className="flex items-center gap-2">
+            {variant === 'destructive' ? (
+              <AlertTriangle className="h-5 w-5 text-destructive" />
+            ) : null}
+            {title}
+          </AlertDialogTitle>
           <AlertDialogDescription>{description}</AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel disabled={isLoading}>
-            {cancelText}
-          </AlertDialogCancel>
+          <AlertDialogCancel disabled={isProcessing}>{cancelText}</AlertDialogCancel>
           <AlertDialogAction
-            onClick={handleConfirm}
-            disabled={isLoading}
-            className={variantStyles[variant]}
+            onClick={(e) => {
+              e.preventDefault()
+              handleConfirm()
+            }}
+            disabled={isProcessing}
+            className={
+              variant === 'destructive'
+                ? 'bg-destructive text-destructive-foreground hover:bg-destructive/90'
+                : ''
+            }
           >
-            {isLoading ? "Processando..." : confirmText}
+            {isProcessing ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Processando...
+              </>
+            ) : (
+              <>
+                {variant === 'destructive' && <Trash2 className="mr-2 h-4 w-4" />}
+                {confirmText}
+              </>
+            )}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
@@ -69,98 +94,50 @@ export function ConfirmDialog({
   )
 }
 
-/**
- * Hook para facilitar uso de confirmações
- *
- * Exemplo:
- * const { confirm, ConfirmDialog } = useConfirm()
- *
- * <ConfirmDialog />
- *
- * const handleDelete = async () => {
- *   const confirmed = await confirm({
- *     title: "Deletar campanha?",
- *     description: "Esta ação não pode ser desfeita."
- *   })
- *
- *   if (confirmed) {
- *     // delete...
- *   }
- * }
- */
-export function useConfirm() {
-  const [dialogState, setDialogState] = React.useState<{
-    open: boolean
-    title: string
-    description: string
-    confirmText?: string
-    cancelText?: string
-    variant?: "danger" | "warning" | "info"
-    resolve?: (value: boolean) => void
-  }>({
-    open: false,
-    title: "",
-    description: "",
-  })
+// Hook para usar o confirm dialog facilmente
+interface UseConfirmOptions {
+  title: string
+  description: string
+  confirmText?: string
+  cancelText?: string
+  variant?: 'default' | 'destructive'
+}
 
-  const confirm = (options: {
-    title: string
-    description: string
-    confirmText?: string
-    cancelText?: string
-    variant?: "danger" | "warning" | "info"
-  }): Promise<boolean> => {
+export function useConfirm() {
+  const [promise, setPromise] = useState<{
+    resolve: (value: boolean) => void
+    options: UseConfirmOptions
+  } | null>(null)
+
+  const confirm = (options: UseConfirmOptions): Promise<boolean> => {
     return new Promise((resolve) => {
-      setDialogState({
-        open: true,
-        ...options,
-        resolve,
-      })
+      setPromise({ resolve, options })
     })
   }
 
-  const handleConfirm = () => {
-    dialogState.resolve?.(true)
-    setDialogState({ ...dialogState, open: false })
+  const handleClose = () => {
+    promise?.resolve(false)
+    setPromise(null)
   }
 
-  const handleCancel = () => {
-    dialogState.resolve?.(false)
-    setDialogState({ ...dialogState, open: false })
+  const handleConfirm = async () => {
+    promise?.resolve(true)
+    setPromise(null)
   }
 
-  const Dialog = () => (
-    <AlertDialog open={dialogState.open} onOpenChange={handleCancel}>
-      <AlertDialogContent>
-        <AlertDialogHeader>
-          <AlertDialogTitle>{dialogState.title}</AlertDialogTitle>
-          <AlertDialogDescription>
-            {dialogState.description}
-          </AlertDialogDescription>
-        </AlertDialogHeader>
-        <AlertDialogFooter>
-          <AlertDialogCancel onClick={handleCancel}>
-            {dialogState.cancelText || "Cancelar"}
-          </AlertDialogCancel>
-          <AlertDialogAction
-            onClick={handleConfirm}
-            className={
-              dialogState.variant === "danger"
-                ? "bg-red-600 hover:bg-red-700"
-                : dialogState.variant === "warning"
-                ? "bg-orange-600 hover:bg-orange-700"
-                : "bg-blue-600 hover:bg-blue-700"
-            }
-          >
-            {dialogState.confirmText || "Confirmar"}
-          </AlertDialogAction>
-        </AlertDialogFooter>
-      </AlertDialogContent>
-    </AlertDialog>
-  )
+  const ConfirmDialogComponent = () =>
+    promise ? (
+      <ConfirmDialog
+        open={true}
+        onOpenChange={handleClose}
+        title={promise.options.title}
+        description={promise.options.description}
+        confirmText={promise.options.confirmText}
+        cancelText={promise.options.cancelText}
+        variant={promise.options.variant}
+        onConfirm={handleConfirm}
+      />
+    ) : null
 
-  return { confirm, ConfirmDialog: Dialog }
+  return { confirm, ConfirmDialog: ConfirmDialogComponent }
 }
-
-// Fix React import
-import * as React from "react"
