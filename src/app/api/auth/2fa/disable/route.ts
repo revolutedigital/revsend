@@ -4,6 +4,7 @@ import { authOptions } from '@/lib/auth'
 import { verifyTwoFactorToken } from '@/lib/auth/2fa'
 import { prisma } from '@/lib/db'
 import bcrypt from 'bcryptjs'
+import { createAuditLogFromRequest } from '@/lib/audit/audit-logger'
 
 /**
  * POST /api/auth/2fa/disable
@@ -48,6 +49,9 @@ export async function POST(request: NextRequest) {
         twoFactorSecret: null,
       },
     })
+
+    // Create audit log
+    await createAuditLogFromRequest(user.id, 'user.2fa_disable')
 
     return NextResponse.json({
       success: true,

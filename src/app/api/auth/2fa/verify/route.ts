@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { verifyTwoFactorToken } from '@/lib/auth/2fa'
 import { prisma } from '@/lib/db'
+import { createAuditLogFromRequest } from '@/lib/audit/audit-logger'
 
 /**
  * POST /api/auth/2fa/verify
@@ -47,6 +48,9 @@ export async function POST(request: NextRequest) {
         twoFactorSecret: secret,
       },
     })
+
+    // Create audit log
+    await createAuditLogFromRequest(user.id, 'user.2fa_enable')
 
     return NextResponse.json({
       success: true,

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { isResetTokenExpired, validatePasswordStrength } from '@/lib/auth/password-reset'
 import bcrypt from 'bcryptjs'
+import { createAuditLogFromRequest } from '@/lib/audit/audit-logger'
 
 /**
  * POST /api/auth/reset-password
@@ -53,6 +54,11 @@ export async function POST(request: NextRequest) {
         passwordResetToken: null,
         passwordResetExpiresAt: null,
       },
+    })
+
+    // Create audit log
+    await createAuditLogFromRequest(user.id, 'user.password_reset_complete', undefined, undefined, {
+      email: user.email,
     })
 
     console.log(`Password reset successful for user: ${user.email}`)

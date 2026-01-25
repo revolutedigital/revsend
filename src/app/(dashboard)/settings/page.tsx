@@ -9,9 +9,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { WhatsAppManager } from "@/components/settings/WhatsAppManager";
 import { WebhookManager } from "@/components/settings/WebhookManager";
+import { AuditLogsViewer } from "@/components/settings/AuditLogsViewer";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { TwoFactorSetup } from "@/components/auth/two-factor-setup";
-import { Smartphone, Key, User, Loader2, CheckCircle2, Webhook, Palette, AlertCircle, Shield } from "lucide-react";
+import { Smartphone, Key, User, Loader2, CheckCircle2, Webhook, Palette, AlertCircle, Shield, Activity } from "lucide-react";
 
 export default function SettingsPage() {
   const { data: session, update } = useSession();
@@ -358,6 +359,22 @@ export default function SettingsPage() {
                 </Button>
               </div>
             )}
+          </CardContent>
+        </Card>
+
+        {/* Audit Logs */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Activity className="h-5 w-5 text-orange" />
+              Logs de Auditoria
+            </CardTitle>
+            <CardDescription>
+              Visualize todas as ações importantes realizadas na sua conta
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <AuditLogsViewer />
           </CardContent>
         </Card>
       </div>

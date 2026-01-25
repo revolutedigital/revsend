@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { generateResetToken, getResetTokenExpiration } from '@/lib/auth/password-reset'
+import { createAuditLogFromRequest } from '@/lib/audit/audit-logger'
 
 /**
  * POST /api/auth/forgot-password
@@ -39,6 +40,11 @@ export async function POST(request: NextRequest) {
         passwordResetToken: resetToken,
         passwordResetExpiresAt: expiresAt,
       },
+    })
+
+    // Create audit log
+    await createAuditLogFromRequest(user.id, 'user.password_reset_request', undefined, undefined, {
+      email: user.email,
     })
 
     // TODO: Send email with reset link

@@ -344,3 +344,22 @@ model DealTask {
   @@index([userId])
   @@map("deal_tasks")
 }
+
+// ==================== AUDIT LOGS ====================
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  userId    String?  @map("user_id") // Null for system actions
+  action    String // login, logout, password_change, 2fa_enable, 2fa_disable, campaign_start, etc
+  resource  String? // Type of resource (campaign, list, contact, etc)
+  resourceId String? @map("resource_id") // ID of the affected resource
+  details   Json? // Additional details about the action
+  ipAddress String?  @map("ip_address")
+  userAgent String?  @map("user_agent")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([userId])
+  @@index([action])
+  @@index([createdAt])
+  @@map("audit_logs")
+}
