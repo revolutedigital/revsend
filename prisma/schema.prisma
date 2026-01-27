@@ -20,17 +20,19 @@ model User {
   createdAt              DateTime  @default(now()) @map("created_at")
   updatedAt              DateTime  @updatedAt @map("updated_at")
 
-  whatsappNumbers WhatsappNumber[]
-  contactLists    ContactList[]
-  campaigns       Campaign[]
-  mediaFiles      MediaFile[]
-  templates       MessageTemplate[]
-  webhooks        Webhook[]
-  pipelineStages  PipelineStage[]
-  deals           Deal[]
-  dealActivities  DealActivity[]
-  dealTasks       DealTask[]
-  settings        UserSettings?
+  whatsappNumbers     WhatsappNumber[]
+  contactLists        ContactList[]
+  campaigns           Campaign[]
+  mediaFiles          MediaFile[]
+  templates           MessageTemplate[]
+  webhooks            Webhook[]
+  pipelineStages      PipelineStage[]
+  deals               Deal[]
+  dealActivities      DealActivity[]
+  dealTasks           DealTask[]
+  settings            UserSettings?
+  onboardingProgress  OnboardingProgress?
+  favorites           UserFavorite[]
 
   @@map("users")
 }
@@ -39,12 +41,48 @@ model UserSettings {
   id              String   @id @default(cuid())
   userId          String   @unique @map("user_id")
   anthropicApiKey String?  @map("anthropic_api_key")
+  locale          String   @default("pt-BR")
+  timezone        String   @default("America/Sao_Paulo")
+  dateFormat      String   @default("DD/MM/YYYY") @map("date_format")
   createdAt       DateTime @default(now()) @map("created_at")
   updatedAt       DateTime @updatedAt @map("updated_at")
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("user_settings")
+}
+
+// ==================== ONBOARDING ====================
+
+model OnboardingProgress {
+  id             String    @id @default(cuid())
+  userId         String    @unique @map("user_id")
+  currentStep    Int       @default(0) @map("current_step")
+  completedSteps String[]  @default([]) @map("completed_steps")
+  skipped        Boolean   @default(false)
+  completedAt    DateTime? @map("completed_at")
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("onboarding_progress")
+}
+
+// ==================== FAVORITES ====================
+
+model UserFavorite {
+  id        String   @id @default(cuid())
+  userId    String   @map("user_id")
+  type      String   // 'campaign', 'list', 'contact', 'deal'
+  entityId  String   @map("entity_id")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, type, entityId])
+  @@index([userId])
+  @@map("user_favorites")
 }
 
 model WhatsappNumber {

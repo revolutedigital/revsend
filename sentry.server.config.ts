@@ -58,6 +58,6 @@ Sentry.init({
   // Captura erros não tratados
   integrations: [
     Sentry.extraErrorDataIntegration({ depth: 5 }),
-    Sentry.httpIntegration({ failedRequestStatusCodes: [500, 599] }),
+    Sentry.httpIntegration(),
   ],
 })

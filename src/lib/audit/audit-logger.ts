@@ -1,4 +1,4 @@
-import { prisma } from '@/lib/db'
+import { db as prisma } from '@/lib/db'
 import { headers } from 'next/headers'
 
 export type AuditAction =
@@ -72,7 +72,7 @@ export async function createAuditLog(options: AuditLogOptions) {
         action,
         resource: resource || null,
         resourceId: resourceId || null,
-        details: details || null,
+        details: details ?? undefined,
         ipAddress: ipAddress || null,
         userAgent: userAgent || null,
       },
@@ -107,8 +107,8 @@ export async function createAuditLogFromRequest(
       resource,
       resourceId,
       details,
-      ipAddress,
-      userAgent,
+      ipAddress: ipAddress ?? undefined,
+      userAgent: userAgent ?? undefined,
     })
   } catch (error) {
     console.error('Failed to create audit log from request:', error)

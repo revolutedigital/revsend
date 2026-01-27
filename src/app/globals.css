@@ -350,3 +350,91 @@
     transform: scale(1);
   }
 }
+
+/* ============================================
+   ACCESSIBILITY - Reduced Motion Support
+   ============================================ */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  /* Disable specific animations */
+  .animate-spin,
+  .animate-pulse,
+  .animate-bounce,
+  .animate-fade-in,
+  .animate-slide-up,
+  .animate-pulse-slow,
+  .animate-float,
+  .animate-in-up,
+  .animate-slide-in-left,
+  .animate-slide-in-right,
+  .animate-scale-in,
+  .stagger-fade-in > *,
+  .stagger-fast > * {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+
+  /* Keep hover states but remove transitions */
+  .hover-lift:hover {
+    transform: none !important;
+  }
+}
+
+/* ============================================
+   ACCESSIBILITY - High Contrast Mode
+   ============================================ */
+@media (prefers-contrast: more) {
+  :root {
+    --border: 214 30% 30%;
+    --ring: 18 100% 50%;
+  }
+
+  .dark {
+    --border: 214 30% 50%;
+  }
+
+  /* Increase border visibility */
+  .border,
+  [class*="border-"] {
+    border-width: 2px !important;
+  }
+
+  /* Enhance focus indicators */
+  :focus-visible {
+    outline: 3px solid hsl(var(--ring)) !important;
+    outline-offset: 2px !important;
+  }
+}
+
+/* ============================================
+   ACCESSIBILITY - Skip Link
+   ============================================ */
+.skip-link {
+  @apply sr-only;
+}
+
+.skip-link:focus {
+  @apply not-sr-only fixed top-4 left-4 z-[9999] px-4 py-2 bg-coral text-white rounded-lg font-medium shadow-lg;
+}
+
+/* ============================================
+   ACCESSIBILITY - Focus Visible Enhancements
+   ============================================ */
+:focus-visible {
+  outline: 2px solid hsl(var(--ring));
+  outline-offset: 2px;
+}
+
+/* Remove default focus outline only when focus-visible is supported */
+:focus:not(:focus-visible) {
+  outline: none;
+}

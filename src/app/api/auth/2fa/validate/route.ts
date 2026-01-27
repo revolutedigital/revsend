@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { verifyTwoFactorToken, verifyBackupCode } from '@/lib/auth/2fa'
-import { prisma } from '@/lib/db'
+import { db as prisma } from '@/lib/db'
 import { createAuditLogFromRequest } from '@/lib/audit/audit-logger'
 
 /**

@@ -16,7 +16,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Rate limiting
-    const rateLimitResult = await rateLimit(request, 'FILE_UPLOAD')
+    const rateLimitResult = await rateLimit(`upload:${session.user.id}`, { windowMs: 60000, maxRequests: 20 })
     if (!rateLimitResult.success) {
       return NextResponse.json(
         { error: 'Muitas requisições. Tente novamente em alguns minutos.' },

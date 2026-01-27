@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { prisma } from '@/lib/db'
+import { db as prisma } from '@/lib/db'
 import { isResetTokenExpired, validatePasswordStrength } from '@/lib/auth/password-reset'
 import bcrypt from 'bcryptjs'
 import { createAuditLogFromRequest } from '@/lib/audit/audit-logger'

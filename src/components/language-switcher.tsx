@@ -9,21 +9,11 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { Button } from '@/components/ui/button'
-import { Globe } from 'lucide-react'
+import { Globe, Check, Loader2 } from 'lucide-react'
+import { locales, localeConfig, type Locale } from '@/lib/i18n'
 
 interface LanguageSwitcherProps {
   currentLocale: string
-}
-
-const languages = {
-  'pt-BR': {
-    name: 'Português (BR)',
-    flag: '🇧🇷',
-  },
-  'en-US': {
-    name: 'English (US)',
-    flag: '🇺🇸',
-  },
 }
 
 export function LanguageSwitcher({ currentLocale }: LanguageSwitcherProps) {
@@ -48,27 +38,44 @@ export function LanguageSwitcher({ currentLocale }: LanguageSwitcherProps) {
     })
   }
 
-  const current = languages[currentLocale as keyof typeof languages] || languages['pt-BR']
+  const current = localeConfig[currentLocale as Locale] || localeConfig['pt-BR']
 
   return (
     <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="sm" disabled={isPending}>
-          <Globe className="h-4 w-4 mr-2" />
-          {current.flag} {current.name}
+        <Button
+          variant="ghost"
+          size="sm"
+          disabled={isPending}
+          aria-label={`Idioma atual: ${current.nativeName}. Clique para alterar.`}
+        >
+          {isPending ? (
+            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+          ) : (
+            <Globe className="h-4 w-4 mr-2" aria-hidden="true" />
+          )}
+          <span className="mr-1">{current.flag}</span>
+          <span className="hidden sm:inline">{current.nativeName}</span>
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end">
-        {Object.entries(languages).map(([locale, lang]) => (
-          <DropdownMenuItem
-            key={locale}
-            onClick={() => changeLocale(locale)}
-            className={locale === currentLocale ? 'bg-accent' : ''}
-          >
-            <span className="mr-2">{lang.flag}</span>
-            {lang.name}
-          </DropdownMenuItem>
-        ))}
+      <DropdownMenuContent align="end" className="w-48">
+        {locales.map((locale) => {
+          const config = localeConfig[locale]
+          const isSelected = locale === currentLocale
+
+          return (
+            <DropdownMenuItem
+              key={locale}
+              onClick={() => changeLocale(locale)}
+              className={isSelected ? 'bg-accent' : ''}
+              aria-current={isSelected ? 'true' : undefined}
+            >
+              <span className="mr-2" aria-hidden="true">{config.flag}</span>
+              <span className="flex-1">{config.nativeName}</span>
+              {isSelected && <Check className="h-4 w-4 ml-2" aria-hidden="true" />}
+            </DropdownMenuItem>
+          )
+        })}
       </DropdownMenuContent>
     </DropdownMenu>
   )

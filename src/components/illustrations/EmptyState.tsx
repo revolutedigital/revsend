@@ -1,9 +1,221 @@
-interface EmptyStateProps {
+'use client'
+
+import { type ReactNode } from 'react'
+import { cn } from '@/lib/utils'
+import { Button } from '@/components/ui/button'
+import { RevSendMascot } from '@/components/logo/RevSendMascot'
+import {
+  FileSpreadsheet,
+  MessageSquare,
+  Phone,
+  Users,
+  Zap,
+  type LucideIcon,
+} from 'lucide-react'
+
+// ==================== EMPTY STATE WRAPPER ====================
+
+interface EmptyStateWrapperProps {
+  icon?: LucideIcon
+  title: string
+  description: string
+  action?: {
+    label: string
+    onClick?: () => void
+    href?: string
+  }
+  secondaryAction?: {
+    label: string
+    onClick?: () => void
+    href?: string
+  }
+  showMascot?: boolean
+  mascotMood?: 'happy' | 'thinking'
+  className?: string
+  children?: ReactNode
+}
+
+export function EmptyState({
+  icon: Icon,
+  title,
+  description,
+  action,
+  secondaryAction,
+  showMascot = false,
+  mascotMood = 'thinking',
+  className,
+  children,
+}: EmptyStateWrapperProps) {
+  return (
+    <div
+      className={cn(
+        'flex flex-col items-center justify-center text-center py-12 px-4',
+        className
+      )}
+    >
+      {showMascot ? (
+        <div className="mb-6 animate-fade-in">
+          <RevSendMascot
+            className="w-24 h-28"
+            mood={mascotMood}
+            variant="static"
+          />
+        </div>
+      ) : Icon ? (
+        <div className="mb-6 p-4 rounded-full bg-navy-800 border border-navy-700 animate-fade-in">
+          <Icon className="w-8 h-8 text-slate-400" />
+        </div>
+      ) : null}
+
+      <h3 className="text-lg font-semibold text-white mb-2">{title}</h3>
+      <p className="text-slate-400 max-w-sm mb-6">{description}</p>
+
+      {children}
+
+      {(action || secondaryAction) && (
+        <div className="flex flex-col sm:flex-row gap-3">
+          {action && (
+            action.href ? (
+              <Button asChild>
+                <a href={action.href}>{action.label}</a>
+              </Button>
+            ) : (
+              <Button onClick={action.onClick}>{action.label}</Button>
+            )
+          )}
+          {secondaryAction && (
+            secondaryAction.href ? (
+              <Button variant="outline" asChild>
+                <a href={secondaryAction.href}>{secondaryAction.label}</a>
+              </Button>
+            ) : (
+              <Button variant="outline" onClick={secondaryAction.onClick}>
+                {secondaryAction.label}
+              </Button>
+            )
+          )}
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ==================== PRE-BUILT EMPTY STATES ====================
+
+export function EmptyContacts() {
+  return (
+    <EmptyState
+      icon={Users}
+      title="Nenhum contato ainda"
+      description="Importe uma lista de contatos CSV ou adicione contatos manualmente para começar."
+      action={{
+        label: 'Importar contatos',
+        href: '/dashboard/lists/new',
+      }}
+      secondaryAction={{
+        label: 'Adicionar manualmente',
+        href: '/dashboard/contacts/new',
+      }}
+    />
+  )
+}
+
+export function EmptyLists() {
+  return (
+    <EmptyState
+      icon={FileSpreadsheet}
+      title="Nenhuma lista criada"
+      description="Crie sua primeira lista de contatos para organizar seus leads."
+      action={{
+        label: 'Criar lista',
+        href: '/dashboard/lists/new',
+      }}
+      showMascot
+      mascotMood="thinking"
+    />
+  )
+}
+
+export function EmptyCampaigns() {
+  return (
+    <EmptyState
+      icon={MessageSquare}
+      title="Nenhuma campanha criada"
+      description="Crie sua primeira campanha para começar a enviar mensagens em massa."
+      action={{
+        label: 'Criar campanha',
+        href: '/dashboard/campaigns/new',
+      }}
+      showMascot
+      mascotMood="happy"
+    />
+  )
+}
+
+export function EmptyWhatsApp() {
+  return (
+    <EmptyState
+      icon={Phone}
+      title="Nenhum WhatsApp conectado"
+      description="Conecte seu primeiro número de WhatsApp para começar a enviar mensagens."
+      action={{
+        label: 'Conectar WhatsApp',
+        href: '/dashboard/whatsapp',
+      }}
+      showMascot
+      mascotMood="thinking"
+    />
+  )
+}
+
+export function EmptyTemplates() {
+  return (
+    <EmptyState
+      icon={Zap}
+      title="Nenhum template salvo"
+      description="Crie templates para reutilizar mensagens em suas campanhas."
+      action={{
+        label: 'Criar template',
+        href: '/dashboard/templates/new',
+      }}
+    />
+  )
+}
+
+export function EmptySearchResults({ query }: { query: string }) {
+  return (
+    <EmptyState
+      title="Nenhum resultado encontrado"
+      description={`Não encontramos resultados para "${query}". Tente usar termos diferentes.`}
+      showMascot
+      mascotMood="thinking"
+    />
+  )
+}
+
+export function EmptyDeals() {
+  return (
+    <EmptyState
+      title="Nenhum negócio no pipeline"
+      description="Adicione seu primeiro negócio para começar a acompanhar suas oportunidades."
+      action={{
+        label: 'Criar negócio',
+        href: '/dashboard/crm/deals/new',
+      }}
+      showMascot
+      mascotMood="happy"
+    />
+  )
+}
+
+// ==================== SVG ILLUSTRATIONS ====================
+
+interface IllustrationProps {
   variant?: "campaigns" | "lists" | "replies" | "default";
   className?: string;
 }
 
-export function EmptyStateIllustration({ variant = "default", className = "w-48 h-48" }: EmptyStateProps) {
+export function EmptyStateIllustration({ variant = "default", className = "w-48 h-48" }: IllustrationProps) {
   if (variant === "campaigns") {
     return (
       <svg viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg" className={className}>

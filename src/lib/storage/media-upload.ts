@@ -114,12 +114,11 @@ export async function uploadMedia(options: MediaUploadOptions): Promise<UploadRe
   const mediaFile = await db.mediaFile.create({
     data: {
       userId,
-      type,
       url: uploadResult.url,
       filename,
+      originalName: filename,
       size: uploadResult.size,
       mimeType: uploadContentType,
-      storageKey: uploadResult.key,
     },
   })
 
@@ -143,8 +142,12 @@ export async function deleteMedia(mediaId: string): Promise<void> {
   }
 
   // Delete from storage
-  if (mediaFile.storageKey) {
-    await deleteFile(mediaFile.storageKey)
+  if (mediaFile.url) {
+    try {
+      await deleteFile(mediaFile.url)
+    } catch {
+      // Ignore storage deletion errors
+    }
   }
 
   // Delete from database

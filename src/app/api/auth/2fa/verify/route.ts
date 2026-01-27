@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
+import { auth } from '@/lib/auth'
 import { verifyTwoFactorToken } from '@/lib/auth/2fa'
-import { prisma } from '@/lib/db'
+import { db as prisma } from '@/lib/db'
 import { createAuditLogFromRequest } from '@/lib/audit/audit-logger'
 
 /**
@@ -11,7 +10,7 @@ import { createAuditLogFromRequest } from '@/lib/audit/audit-logger'
  */
 export async function POST(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions)
+    const session = await auth()
 
     if (!session?.user?.email) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })

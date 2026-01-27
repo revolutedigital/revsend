@@ -91,11 +91,10 @@ export async function simpleSearchContacts(
   const { listId, limit = 50 } = options
 
   const where: Prisma.ContactWhereInput = {
-    userId,
+    list: { userId },
     OR: [
       { name: { contains: query, mode: 'insensitive' } },
       { phoneNumber: { contains: query } },
-      { email: { contains: query, mode: 'insensitive' } },
     ],
   }
 

@@ -1,8 +1,17 @@
 import { cookies } from 'next/headers'
 
-export const locales = ['pt-BR', 'en-US'] as const
+export const locales = ['pt-BR', 'en-US', 'es', 'fr', 'de'] as const
 export type Locale = (typeof locales)[number]
 export const defaultLocale: Locale = 'pt-BR'
+
+// Language display names and flags
+export const localeConfig: Record<Locale, { name: string; flag: string; nativeName: string }> = {
+  'pt-BR': { name: 'Portuguese (Brazil)', flag: '🇧🇷', nativeName: 'Português (Brasil)' },
+  'en-US': { name: 'English (US)', flag: '🇺🇸', nativeName: 'English (US)' },
+  'es': { name: 'Spanish', flag: '🇪🇸', nativeName: 'Español' },
+  'fr': { name: 'French', flag: '🇫🇷', nativeName: 'Français' },
+  'de': { name: 'German', flag: '🇩🇪', nativeName: 'Deutsch' },
+}
 
 const LOCALE_COOKIE = 'NEXT_LOCALE'
 
