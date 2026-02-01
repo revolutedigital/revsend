@@ -1,7 +1,13 @@
 import { withSentryConfig } from '@sentry/nextjs'
+import bundleAnalyzer from '@next/bundle-analyzer'
+
+const withBundleAnalyzer = bundleAnalyzer({
+  enabled: process.env.ANALYZE === 'true',
+})
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  output: 'standalone',
   experimental: {
     serverComponentsExternalPackages: ['@whiskeysockets/baileys'],
     optimizePackageImports: ['lucide-react', '@radix-ui/react-icons'],
@@ -91,6 +97,8 @@ const sentryWebpackPluginOptions = {
 }
 
 // Export com Sentry wrapper se DSN estiver configurado
-export default process.env.NEXT_PUBLIC_SENTRY_DSN
+const finalConfig = process.env.NEXT_PUBLIC_SENTRY_DSN
   ? withSentryConfig(nextConfig, sentryWebpackPluginOptions)
   : nextConfig
+
+export default withBundleAnalyzer(finalConfig)

@@ -17,6 +17,10 @@ model User {
   twoFactorBackupCodes   String[]  @default([]) @map("two_factor_backup_codes")
   passwordResetToken     String?   @unique @map("password_reset_token")
   passwordResetExpiresAt DateTime? @map("password_reset_expires_at")
+  emailVerified          Boolean   @default(false) @map("email_verified")
+  emailVerifyToken       String?   @unique @map("email_verify_token")
+  failedLoginAttempts    Int       @default(0) @map("failed_login_attempts")
+  lastFailedLogin        DateTime? @map("last_failed_login")
   createdAt              DateTime  @default(now()) @map("created_at")
   updatedAt              DateTime  @updatedAt @map("updated_at")
 
@@ -401,4 +405,63 @@ model AuditLog {
   @@index([action])
   @@index([createdAt])
   @@map("audit_logs")
+}
+
+// ==================== LGPD COMPLIANCE ====================
+
+model ContactConsent {
+  id          String    @id @default(cuid())
+  phoneNumber String    @map("phone_number")
+  consentType String    @map("consent_type") // marketing, transactional
+  granted     Boolean   @default(false)
+  grantedAt   DateTime? @map("granted_at")
+  revokedAt   DateTime? @map("revoked_at")
+  source      String?   // import, manual, opt-in, api
+  ipAddress   String?   @map("ip_address")
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+
+  @@unique([phoneNumber, consentType])
+  @@index([phoneNumber])
+  @@map("contact_consents")
+}
+
+model Blacklist {
+  id          String   @id @default(cuid())
+  phoneNumber String   @unique @map("phone_number")
+  reason      String?  // opt-out, complaint, manual, keyword
+  addedBy     String?  @map("added_by") // userId or 'system'
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  @@index([phoneNumber])
+  @@map("blacklist")
+}
+
+// ==================== MULTI-TENANCY ====================
+
+model Organization {
+  id        String   @id @default(cuid())
+  name      String
+  slug      String   @unique
+  plan      String   @default("free") // free, starter, pro, enterprise
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  members OrganizationMember[]
+
+  @@map("organizations")
+}
+
+model OrganizationMember {
+  id             String   @id @default(cuid())
+  organizationId String   @map("organization_id")
+  userId         String   @map("user_id")
+  role           String   @default("member") // owner, admin, member, viewer
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@unique([organizationId, userId])
+  @@index([userId])
+  @@map("organization_members")
 }

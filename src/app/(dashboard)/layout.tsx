@@ -1,9 +1,16 @@
 import { redirect } from "next/navigation";
+import dynamic from "next/dynamic";
 import { auth } from "@/lib/auth";
 import { Sidebar } from "@/components/dashboard/Sidebar";
 import { SessionProvider } from "@/components/providers/SessionProvider";
-import { CommandPalette } from "@/components/command-palette";
 import { Announcer } from "@/components/ui/announcer";
+import { OnboardingProvider } from "@/components/onboarding/OnboardingProvider";
+import { DynamicBreadcrumb } from "@/components/dashboard/DynamicBreadcrumb";
+
+const CommandPalette = dynamic(
+  () => import("@/components/command-palette").then((mod) => mod.CommandPalette),
+  { ssr: false }
+);
 
 export default async function DashboardLayout({
   children,
@@ -36,7 +43,12 @@ export default async function DashboardLayout({
           aria-label="Conteúdo principal"
         >
           <div className="min-h-screen">
-            {children}
+            <div className="px-6 pt-4">
+              <DynamicBreadcrumb />
+            </div>
+            <OnboardingProvider>
+              {children}
+            </OnboardingProvider>
           </div>
         </main>
         <CommandPalette />

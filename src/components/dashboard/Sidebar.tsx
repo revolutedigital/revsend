@@ -246,6 +246,8 @@ export function Sidebar({ collapsed = false }: SidebarProps) {
                                 <span
                                   className="flex items-center justify-center min-w-[20px] h-5 px-1.5 text-xs font-bold bg-[#00D9A5] text-white rounded-full animate-pulse"
                                   aria-label={`${unreadReplies} novas respostas`}
+                                  aria-live="polite"
+                                  aria-atomic="true"
                                 >
                                   {unreadReplies > 99 ? "99+" : unreadReplies}
                                 </span>

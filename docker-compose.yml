@@ -1,4 +1,21 @@
 services:
+  app:
+    build: .
+    ports:
+      - '3000:3000'
+    environment:
+      - DATABASE_URL=postgresql://revsend:revsend123@postgres:5432/revsend
+      - REDIS_URL=redis://redis:6379
+      - NEXTAUTH_SECRET=${NEXTAUTH_SECRET:-dev-secret-change-me}
+      - NEXTAUTH_URL=http://localhost:3000
+      - ENCRYPTION_KEY=${ENCRYPTION_KEY:-dev-key-32-bytes-long-change-me!}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+
   postgres:
     image: postgres:16-alpine
     container_name: revsend-postgres

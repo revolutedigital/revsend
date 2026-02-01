@@ -1,6 +1,7 @@
 import speakeasy from 'speakeasy'
 import QRCode from 'qrcode'
 import crypto from 'crypto'
+import { encrypt, decrypt } from '../encryption'
 
 const APP_NAME = 'RevSend'
 
@@ -50,7 +51,8 @@ export function verifyTwoFactorToken(secret: string, token: string): boolean {
  * Generate a backup code (for account recovery)
  */
 export function generateBackupCode(): string {
-  const code = Math.random().toString(36).substring(2, 10).toUpperCase()
+  const bytes = crypto.randomBytes(5)
+  const code = bytes.toString('hex').substring(0, 8).toUpperCase()
   return code.match(/.{1,4}/g)?.join('-') || code
 }
 
@@ -99,4 +101,18 @@ export function verifyBackupCode(
 export function formatBackupCode(code: string): string {
   const clean = code.replace(/-/g, '').toUpperCase()
   return clean.match(/.{1,4}/g)?.join('-') || clean
+}
+
+/**
+ * Encrypt a 2FA secret for secure database storage
+ */
+export function encryptTwoFactorSecret(secret: string): string {
+  return encrypt(secret)
+}
+
+/**
+ * Decrypt a 2FA secret from database storage
+ */
+export function decryptTwoFactorSecret(encryptedSecret: string): string {
+  return decrypt(encryptedSecret)
 }

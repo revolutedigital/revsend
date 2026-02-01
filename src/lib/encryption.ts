@@ -2,10 +2,12 @@ import crypto from 'crypto'
 
 // A chave de encriptação deve vir das variáveis de ambiente
 // DEVE ter exatamente 32 bytes (256 bits) para AES-256
-const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY || 'dev-key-32-bytes-long-change!'
-
-if (!process.env.ENCRYPTION_KEY && process.env.NODE_ENV === 'production') {
-  console.warn('WARNING: ENCRYPTION_KEY não configurada. Usando chave de desenvolvimento.')
+function getEncryptionKey(): string {
+  const key = process.env.ENCRYPTION_KEY
+  if (!key && process.env.NODE_ENV === 'production') {
+    throw new Error('FATAL: ENCRYPTION_KEY must be set in production environment')
+  }
+  return key || 'dev-key-32-bytes-long-change-me!'
 }
 
 const ALGORITHM = 'aes-256-gcm'
@@ -18,7 +20,7 @@ const KEY_LENGTH = 32
  * Deriva uma chave de 256 bits a partir da chave de encriptação usando PBKDF2
  */
 function deriveKey(salt: Buffer): Buffer {
-  return crypto.pbkdf2Sync(ENCRYPTION_KEY, salt, 100000, KEY_LENGTH, 'sha512')
+  return crypto.pbkdf2Sync(getEncryptionKey(), salt, 100000, KEY_LENGTH, 'sha512')
 }
 
 /**

@@ -80,6 +80,28 @@ function getRateLimitConfig(pathname: string) {
   return null // Sem rate limit
 }
 
+const SUPPORTED_LOCALES = ['pt-BR', 'en-US', 'es', 'fr', 'de']
+const DEFAULT_LOCALE = 'pt-BR'
+
+function negotiateLocale(request: NextRequest): string {
+  const cookieLocale = request.cookies.get('locale')?.value
+  if (cookieLocale && SUPPORTED_LOCALES.includes(cookieLocale)) {
+    return cookieLocale
+  }
+  const acceptLang = request.headers.get('accept-language')
+  if (acceptLang) {
+    const preferred = acceptLang
+      .split(',')
+      .map((lang) => lang.split(';')[0].trim())
+      .find((lang) => SUPPORTED_LOCALES.some((sl) => lang.startsWith(sl.split('-')[0])))
+    if (preferred) {
+      const match = SUPPORTED_LOCALES.find((sl) => preferred.startsWith(sl.split('-')[0]))
+      if (match) return match
+    }
+  }
+  return DEFAULT_LOCALE
+}
+
 export async function middleware(request: NextRequest) {
   const pathname = request.nextUrl.pathname
 
@@ -95,6 +117,9 @@ export async function middleware(request: NextRequest) {
   // Get session para identificar usuário
   const session = await auth()
   const userId = session?.user?.id
+
+  // Locale negotiation
+  const locale = negotiateLocale(request)
 
   // Rate limiting
   const rateLimitConfig = getRateLimitConfig(pathname)
@@ -131,6 +156,12 @@ export async function middleware(request: NextRequest) {
 
   // Para rotas sem rate limit, apenas adiciona security headers
   const response = NextResponse.next()
+
+  // Set locale cookie if not present
+  if (!request.cookies.get('locale')) {
+    response.cookies.set('locale', locale, { path: '/', maxAge: 365 * 24 * 60 * 60 })
+  }
+
   return addSecurityHeaders(response)
 }
 

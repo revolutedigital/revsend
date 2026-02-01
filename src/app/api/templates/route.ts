@@ -1,75 +1,49 @@
-import { NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
+import { NextRequest, NextResponse } from "next/server";
+import { apiHandler } from "@/lib/api-handler";
 import { db } from "@/lib/db";
 
 // GET - Listar templates do usuário
-export async function GET(request: Request) {
-  try {
-    const session = await auth();
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
-    }
+export const GET = apiHandler(async (req: NextRequest, { session }) => {
+  const { searchParams } = new URL(req.url);
+  const category = searchParams.get("category");
 
-    const { searchParams } = new URL(request.url);
-    const category = searchParams.get("category");
+  const templates = await db.messageTemplate.findMany({
+    where: {
+      userId: session!.user.id,
+      ...(category ? { category } : {}),
+    },
+    orderBy: [
+      { timesUsed: "desc" },
+      { updatedAt: "desc" },
+    ],
+  });
 
-    const templates = await db.messageTemplate.findMany({
-      where: {
-        userId: session.user.id,
-        ...(category ? { category } : {}),
-      },
-      orderBy: [
-        { timesUsed: "desc" },
-        { updatedAt: "desc" },
-      ],
-    });
-
-    return NextResponse.json({ templates });
-  } catch (error) {
-    console.error("Erro ao buscar templates:", error);
-    return NextResponse.json(
-      { error: "Erro ao buscar templates" },
-      { status: 500 }
-    );
-  }
-}
+  return NextResponse.json({ templates });
+});
 
 // POST - Criar novo template
-export async function POST(request: Request) {
-  try {
-    const session = await auth();
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
-    }
+export const POST = apiHandler(async (req: NextRequest, { session }) => {
+  const body = await req.json();
+  const { name, category, content, mediaType, mediaUrl, mediaName } = body;
 
-    const body = await request.json();
-    const { name, category, content, mediaType, mediaUrl, mediaName } = body;
-
-    if (!name || !content) {
-      return NextResponse.json(
-        { error: "Nome e conteúdo são obrigatórios" },
-        { status: 400 }
-      );
-    }
-
-    const template = await db.messageTemplate.create({
-      data: {
-        userId: session.user.id,
-        name,
-        category: category || null,
-        content,
-        mediaType: mediaType || null,
-        mediaUrl: mediaUrl || null,
-        mediaName: mediaName || null,
-      },
-    });
-
-    return NextResponse.json({ template }, { status: 201 });
-  } catch (error) {
-    console.error("Erro ao criar template:", error);
+  if (!name || !content) {
     return NextResponse.json(
-      { error: "Erro ao criar template" },
-      { status: 500 }
+      { error: "Nome e conteúdo são obrigatórios" },
+      { status: 400 }
     );
   }
-}
+
+  const template = await db.messageTemplate.create({
+    data: {
+      userId: session!.user.id,
+      name,
+      category: category || null,
+      content,
+      mediaType: mediaType || null,
+      mediaUrl: mediaUrl || null,
+      mediaName: mediaName || null,
+    },
+  });
+
+  return NextResponse.json({ template }, { status: 201 });
+});
