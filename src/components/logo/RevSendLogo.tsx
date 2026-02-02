@@ -16,7 +16,7 @@ export function RevSendLogo({ className = "w-24 h-24" }: RevSendLogoProps) {
         {/* Gradiente coral vibrante */}
         <linearGradient id="coralGradient" x1="0%" y1="0%" x2="100%" y2="100%">
           <stop offset="0%" stopColor="#FF8F5C" />
-          <stop offset="50%" stopColor="#FF6B35" />
+          <stop offset="50%" stopColor="#ff7336" />
           <stop offset="100%" stopColor="#E85520" />
         </linearGradient>
 
@@ -37,13 +37,13 @@ export function RevSendLogo({ className = "w-24 h-24" }: RevSendLogoProps) {
 
         {/* Sombra */}
         <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
-          <feDropShadow dx="0" dy="4" stdDeviation="6" floodColor="#0A1628" floodOpacity="0.3" />
+          <feDropShadow dx="0" dy="4" stdDeviation="6" floodColor="#101820" floodOpacity="0.3" />
         </filter>
       </defs>
 
       {/* Circulo de fundo navy com borda coral */}
       <circle cx="60" cy="60" r="56" fill="#0F1E32" filter="url(#shadow)" />
-      <circle cx="60" cy="60" r="54" stroke="#FF6B35" strokeWidth="3" fill="none" />
+      <circle cx="60" cy="60" r="54" stroke="#ff7336" strokeWidth="3" fill="none" />
 
       {/* Seta principal - formato bold e visivel */}
       <path
@@ -53,17 +53,17 @@ export function RevSendLogo({ className = "w-24 h-24" }: RevSendLogoProps) {
       />
 
       {/* Rastros de velocidade */}
-      <path d="M12 50 L30 50" stroke="#FF6B35" strokeWidth="4" strokeLinecap="round" opacity="0.7" />
-      <path d="M8 60 L25 60" stroke="#FF6B35" strokeWidth="5" strokeLinecap="round" opacity="0.9" />
-      <path d="M12 70 L30 70" stroke="#FF6B35" strokeWidth="4" strokeLinecap="round" opacity="0.7" />
+      <path d="M12 50 L30 50" stroke="#ff7336" strokeWidth="4" strokeLinecap="round" opacity="0.7" />
+      <path d="M8 60 L25 60" stroke="#ff7336" strokeWidth="5" strokeLinecap="round" opacity="0.9" />
+      <path d="M12 70 L30 70" stroke="#ff7336" strokeWidth="4" strokeLinecap="round" opacity="0.7" />
 
       {/* Indicador de destino - mint */}
       <circle cx="88" cy="60" r="8" fill="url(#mintGradient)" />
       <circle cx="88" cy="60" r="4" fill="white" opacity="0.9" />
 
       {/* Linhas internas representando mensagens */}
-      <rect x="55" y="54" width="25" height="4" rx="2" fill="#0A1628" opacity="0.4" />
-      <rect x="55" y="62" width="18" height="4" rx="2" fill="#0A1628" opacity="0.3" />
+      <rect x="55" y="54" width="25" height="4" rx="2" fill="#101820" opacity="0.4" />
+      <rect x="55" y="62" width="18" height="4" rx="2" fill="#101820" opacity="0.3" />
     </svg>
   );
 }
@@ -80,7 +80,7 @@ export function RevSendLogoCompact({ className = "w-10 h-10" }: RevSendLogoProps
       <defs>
         <linearGradient id="compactCoral" x1="0%" y1="0%" x2="100%" y2="100%">
           <stop offset="0%" stopColor="#FF9A6C" />
-          <stop offset="100%" stopColor="#FF6B35" />
+          <stop offset="100%" stopColor="#ff7336" />
         </linearGradient>
         <linearGradient id="compactMint" x1="0%" y1="100%" x2="100%" y2="0%">
           <stop offset="0%" stopColor="#00D9A5" />
@@ -89,7 +89,7 @@ export function RevSendLogoCompact({ className = "w-10 h-10" }: RevSendLogoProps
       </defs>
 
       {/* Fundo laranja solido - alta visibilidade */}
-      <circle cx="20" cy="20" r="18" fill="#FF6B35" />
+      <circle cx="20" cy="20" r="18" fill="#ff7336" />
 
       {/* Ring interno branco para destaque */}
       <circle cx="20" cy="20" r="15" fill="none" stroke="white" strokeWidth="1.5" opacity="0.3" />
@@ -119,7 +119,7 @@ export function RevSendLogoFull({ className = "h-10" }: RevSendLogoProps) {
       <RevSendLogoCompact className="w-10 h-10" />
       <span className="font-display text-2xl font-bold tracking-tight">
         <span className="text-white">Rev</span>
-        <span className="text-[#FF6B35]">Send</span>
+        <span className="text-[#ff7336]">Send</span>
       </span>
     </div>
   );
@@ -130,7 +130,7 @@ export function RevSendWordmark({ className = "" }: RevSendLogoProps) {
   return (
     <span className={`font-display font-bold tracking-tight inline-flex ${className}`}>
       <span className="text-white">Rev</span>
-      <span className="text-[#FF6B35]">Send</span>
+      <span className="text-[#ff7336]">Send</span>
     </span>
   );
 }
@@ -146,12 +146,12 @@ export function RevSendLogoAnimated({ className = "w-16 h-16" }: RevSendLogoProp
     >
       <defs>
         <linearGradient id="animNavy" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stopColor="#0A1628" />
+          <stop offset="0%" stopColor="#101820" />
           <stop offset="100%" stopColor="#1A2D4A" />
         </linearGradient>
         <linearGradient id="animCoral" x1="0%" y1="0%" x2="100%" y2="100%">
           <stop offset="0%" stopColor="#FF8F5C" />
-          <stop offset="100%" stopColor="#FF6B35" />
+          <stop offset="100%" stopColor="#ff7336" />
         </linearGradient>
         <linearGradient id="animMint" x1="0%" y1="100%" x2="100%" y2="0%">
           <stop offset="0%" stopColor="#00B388" />
@@ -165,8 +165,8 @@ export function RevSendLogoAnimated({ className = "w-16 h-16" }: RevSendLogoProp
       {/* Rastros animados */}
       <g>
         <path d="M22 60 L42 60" stroke="url(#animCoral)" strokeWidth="4" strokeLinecap="round" />
-        <path d="M25 50 L40 50" stroke="#FF6B35" strokeWidth="3" strokeLinecap="round" opacity="0.8" />
-        <path d="M25 70 L40 70" stroke="#FF6B35" strokeWidth="3" strokeLinecap="round" opacity="0.8" />
+        <path d="M25 50 L40 50" stroke="#ff7336" strokeWidth="3" strokeLinecap="round" opacity="0.8" />
+        <path d="M25 70 L40 70" stroke="#ff7336" strokeWidth="3" strokeLinecap="round" opacity="0.8" />
       </g>
 
       {/* Foguete */}

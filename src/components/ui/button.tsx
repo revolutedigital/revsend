@@ -22,15 +22,15 @@ const buttonVariants = cva(
         link: "text-primary underline-offset-4 hover:underline",
 
         // Variantes RevSend - Cores da marca
-        coral: "bg-[#FF6B35] text-white hover:bg-[#E85520] hover:shadow-[0_0_20px_rgba(255,107,53,0.3)] hover:-translate-y-0.5",
-        orange: "bg-[#FF6B35] text-white hover:bg-[#E85520] hover:shadow-[0_0_20px_rgba(255,107,53,0.3)] hover:-translate-y-0.5",
-        navy: "bg-[#0A1628] text-white hover:bg-[#1A2D4A] hover:shadow-lg",
-        mint: "bg-[#00D9A5] text-white hover:bg-[#00B388] hover:shadow-[0_0_20px_rgba(0,217,165,0.3)] hover:-translate-y-0.5",
+        coral: "bg-[#ff7336] text-white hover:bg-[#E85A1E] hover:shadow-[0_0_20px_rgba(255,115,54,0.2)] hover:-translate-y-0.5",
+        orange: "bg-[#ff7336] text-white hover:bg-[#E85A1E] hover:shadow-[0_0_20px_rgba(255,115,54,0.2)] hover:-translate-y-0.5",
+        navy: "bg-[#101820] text-white hover:bg-[#1A2D4A] hover:shadow-lg",
+        mint: "bg-[#00D9A5] text-white hover:bg-[#00B388] hover:shadow-[0_0_20px_rgba(0,217,165,0.2)] hover:-translate-y-0.5",
 
         // Variantes outline da marca
-        "outline-coral": "border-2 border-[#FF6B35] text-[#FF6B35] bg-transparent hover:bg-[#FF6B35] hover:text-white",
-        "outline-mint": "border-2 border-[#00D9A5] text-[#00D9A5] bg-transparent hover:bg-[#00D9A5] hover:text-white",
-        "outline-navy": "border-2 border-[#0A1628] text-[#0A1628] bg-transparent hover:bg-[#0A1628] hover:text-white",
+        "outline-coral": "border border-[#ff7336]/30 text-[#ff7336] bg-transparent hover:bg-[#ff7336]/10",
+        "outline-mint": "border border-[#00D9A5]/30 text-[#00D9A5] bg-transparent hover:bg-[#00D9A5]/10",
+        "outline-navy": "border border-[#101820]/30 text-[#101820] bg-transparent hover:bg-[#101820]/10",
       },
       size: {
         xs: "h-7 px-2 text-xs rounded",

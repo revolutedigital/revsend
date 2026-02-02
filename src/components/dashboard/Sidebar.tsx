@@ -168,7 +168,7 @@ export function Sidebar({ collapsed = false }: SidebarProps) {
           <RevSendLogoCompact className="w-9 h-9" />
           {!collapsed && (
             <span className="text-lg font-display font-bold text-white">
-              Rev<span className="text-[#FF6B35]">Send</span>
+              Rev<span className="text-[#ff7336]">Send</span>
             </span>
           )}
         </div>
@@ -230,8 +230,8 @@ export function Sidebar({ collapsed = false }: SidebarProps) {
                           className={cn(
                             "group flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200",
                             isActive
-                              ? "bg-[#FF6B35] text-white shadow-[0_0_20px_rgba(255,107,53,0.3)]"
-                              : "text-navy-200 hover:bg-navy-400/50 hover:text-white",
+                              ? "bg-[#ff7336]/10 text-[#ff7336] border-l-2 border-[#ff7336] shadow-[inset_0_0_20px_rgba(255,115,54,0.05)]"
+                              : "text-navy-200 hover:bg-white/5 hover:text-white",
                             collapsed && "justify-center px-2"
                           )}
                         >
@@ -244,7 +244,7 @@ export function Sidebar({ collapsed = false }: SidebarProps) {
                               <span className="flex-1">{item.label}</span>
                               {showBadge && (
                                 <span
-                                  className="flex items-center justify-center min-w-[20px] h-5 px-1.5 text-xs font-bold bg-[#00D9A5] text-white rounded-full animate-pulse"
+                                  className="flex items-center justify-center min-w-[20px] h-5 px-1.5 text-xs font-bold bg-mint text-white rounded-full animate-pulse"
                                   aria-label={`${unreadReplies} novas respostas`}
                                   aria-live="polite"
                                   aria-atomic="true"
@@ -259,7 +259,7 @@ export function Sidebar({ collapsed = false }: SidebarProps) {
                           )}
                           {collapsed && showBadge && (
                             <span
-                              className="absolute -top-1 -right-1 flex items-center justify-center w-4 h-4 text-[10px] font-bold bg-[#00D9A5] text-white rounded-full"
+                              className="absolute -top-1 -right-1 flex items-center justify-center w-4 h-4 text-[10px] font-bold bg-mint text-white rounded-full"
                               aria-label={`${unreadReplies} novas respostas`}
                             >
                               {unreadReplies > 9 ? "9+" : unreadReplies}
@@ -284,7 +284,7 @@ export function Sidebar({ collapsed = false }: SidebarProps) {
         aria-label="Status do sistema"
       >
         <div className={cn("flex items-center gap-2 text-xs text-navy-200", collapsed && "justify-center")}>
-          <div className="w-2 h-2 bg-[#00D9A5] rounded-full animate-pulse flex-shrink-0" aria-hidden="true" />
+          <div className="w-2 h-2 bg-mint rounded-full animate-pulse flex-shrink-0" aria-hidden="true" />
           {!collapsed && <span>Sistema operacional</span>}
           {collapsed && <span className="sr-only">Sistema operacional</span>}
         </div>
@@ -342,7 +342,7 @@ export function Sidebar({ collapsed = false }: SidebarProps) {
         aria-hidden={!mobileOpen}
       >
         {/* Decorative gradient */}
-        <div className="absolute top-0 left-0 w-full h-32 bg-gradient-to-b from-[#FF6B35]/5 to-transparent pointer-events-none" aria-hidden="true" />
+        <div className="absolute top-0 left-0 w-full h-32 bg-gradient-to-b from-[#ff7336]/5 to-transparent pointer-events-none" aria-hidden="true" />
         <SidebarContent />
       </aside>
 
@@ -355,7 +355,7 @@ export function Sidebar({ collapsed = false }: SidebarProps) {
         aria-label="Menu de navegação"
       >
         {/* Decorative gradient */}
-        <div className="absolute top-0 left-0 w-full h-32 bg-gradient-to-b from-[#FF6B35]/5 to-transparent pointer-events-none" aria-hidden="true" />
+        <div className="absolute top-0 left-0 w-full h-32 bg-gradient-to-b from-[#ff7336]/5 to-transparent pointer-events-none" aria-hidden="true" />
         <SidebarContent />
       </aside>
     </>

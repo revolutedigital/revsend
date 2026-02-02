@@ -232,7 +232,7 @@ export default function SettingsPage() {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Palette className="h-5 w-5 text-[#FF6B35]" />
+              <Palette className="h-5 w-5 text-[#ff7336]" />
               Aparencia
             </CardTitle>
             <CardDescription>
@@ -256,7 +256,7 @@ export default function SettingsPage() {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <User className="h-5 w-5 text-[#FF6B35]" />
+              <User className="h-5 w-5 text-[#ff7336]" />
               Conta
             </CardTitle>
             <CardDescription>

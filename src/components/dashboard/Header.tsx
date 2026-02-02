@@ -33,21 +33,21 @@ export function Header({ title, description }: HeaderProps) {
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
               placeholder="Buscar..."
-              className="w-64 pl-9 bg-muted/50 border-transparent focus:border-[#FF6B35] focus:ring-[#FF6B35]/20"
+              className="w-64 pl-9 bg-muted/50 border-transparent focus:border-[#ff7336] focus:ring-[#ff7336]/20"
             />
           </div>
 
           {/* Notifications */}
           <Button variant="ghost" size="icon" className="relative">
             <Bell className="h-5 w-5" />
-            <span className="absolute -top-1 -right-1 h-4 w-4 bg-[#FF6B35] text-[10px] font-bold text-white rounded-full flex items-center justify-center animate-pulse">
+            <span className="absolute -top-1 -right-1 h-4 w-4 bg-[#ff7336] text-[10px] font-bold text-white rounded-full flex items-center justify-center animate-pulse">
               3
             </span>
           </Button>
 
           {/* User */}
           <div className="flex items-center gap-3">
-            <div className="h-9 w-9 rounded-full bg-gradient-to-br from-[#FF6B35] to-[#E85520] flex items-center justify-center text-white font-semibold shadow-sm">
+            <div className="h-9 w-9 rounded-full bg-gradient-to-br from-[#ff7336] to-[#E85520] flex items-center justify-center text-white font-semibold shadow-sm">
               {session?.user?.name?.charAt(0) || session?.user?.email?.charAt(0) || "U"}
             </div>
             <div className="hidden md:block">

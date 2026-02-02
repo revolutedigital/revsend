@@ -1,16 +1,16 @@
 <svg width="1200" height="630" viewBox="0 0 1200 630" fill="none" xmlns="http://www.w3.org/2000/svg">
   <defs>
     <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stopColor="#0A1628" />
+      <stop offset="0%" stopColor="#101820" />
       <stop offset="100%" stopColor="#0F1E32" />
     </linearGradient>
     <linearGradient id="coralGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stopColor="#FF6B35" />
+      <stop offset="0%" stopColor="#ff7336" />
       <stop offset="100%" stopColor="#FF8F5C" />
     </linearGradient>
     <radialGradient id="orbCoral" cx="0" cy="0" r="1">
-      <stop offset="0%" stopColor="#FF6B35" stopOpacity="0.3" />
-      <stop offset="100%" stopColor="#FF6B35" stopOpacity="0" />
+      <stop offset="0%" stopColor="#ff7336" stopOpacity="0.3" />
+      <stop offset="100%" stopColor="#ff7336" stopOpacity="0" />
     </radialGradient>
     <radialGradient id="orbMint" cx="0" cy="0" r="1">
       <stop offset="0%" stopColor="#00D9A5" stopOpacity="0.3" />
@@ -45,18 +45,18 @@
 
   <!-- Logo icon -->
   <g transform="translate(100, 215)">
-    <circle cx="100" cy="100" r="90" fill="#0A1628" stroke="#FF6B35" strokeWidth="2" opacity="0.5"/>
+    <circle cx="100" cy="100" r="90" fill="#101820" stroke="#ff7336" strokeWidth="2" opacity="0.5"/>
 
     <!-- Waves -->
-    <path d="M55 100C55 75 75 55 100 55" stroke="#FF6B35" strokeWidth="4" strokeLinecap="round" fill="none" opacity="0.4"/>
-    <path d="M40 100C40 67 67 40 100 40" stroke="#FF6B35" strokeWidth="3" strokeLinecap="round" fill="none" opacity="0.25"/>
+    <path d="M55 100C55 75 75 55 100 55" stroke="#ff7336" strokeWidth="4" strokeLinecap="round" fill="none" opacity="0.4"/>
+    <path d="M40 100C40 67 67 40 100 40" stroke="#ff7336" strokeWidth="3" strokeLinecap="round" fill="none" opacity="0.25"/>
 
     <!-- Arrow -->
     <path d="M70 135L100 65L140 100L100 92L90 120L70 135Z" fill="url(#coralGrad)"/>
 
     <!-- Center -->
-    <circle cx="100" cy="100" r="12" fill="#FF6B35"/>
-    <circle cx="100" cy="100" r="6" fill="#0A1628"/>
+    <circle cx="100" cy="100" r="12" fill="#ff7336"/>
+    <circle cx="100" cy="100" r="6" fill="#101820"/>
 
     <!-- Accent -->
     <circle cx="130" cy="75" r="5" fill="#00D9A5"/>
@@ -64,7 +64,7 @@
 
   <!-- Text -->
   <text x="320" y="270" font-family="system-ui, -apple-system, sans-serif" font-size="72" font-weight="700" fill="white">
-    Rev<tspan fill="#FF6B35">Send</tspan>
+    Rev<tspan fill="#ff7336">Send</tspan>
   </text>
 
   <text x="320" y="340" font-family="system-ui, -apple-system, sans-serif" font-size="32" font-weight="400" fill="#8FA3BC">
@@ -78,7 +78,7 @@
   </g>
 
   <g transform="translate(320, 450)">
-    <circle cx="8" cy="8" r="6" fill="#FF6B35"/>
+    <circle cx="8" cy="8" r="6" fill="#ff7336"/>
     <text x="24" y="14" font-family="system-ui, sans-serif" font-size="20" fill="#C5D0DE">Sistema anti-bloqueio inteligente</text>
   </g>
 

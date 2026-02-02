@@ -23,7 +23,7 @@ interface ConfettiProps {
 }
 
 const DEFAULT_COLORS = [
-  '#FF6B35', // coral
+  '#ff7336', // coral
   '#00D9A5', // mint
   '#FFD93D', // gold
   '#FF8F5C', // coral light
@@ -200,7 +200,7 @@ export function CampaignLaunchCelebration({ active, onComplete }: { active: bool
     <Confetti
       active={active}
       particleCount={200}
-      colors={['#FF6B35', '#FF8F5C', '#FFD93D', '#00D9A5', '#FFFFFF']}
+      colors={['#ff7336', '#FF8F5C', '#FFD93D', '#00D9A5', '#FFFFFF']}
       duration={5000}
       onComplete={onComplete}
     />

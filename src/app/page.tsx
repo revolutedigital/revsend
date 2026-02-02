@@ -45,13 +45,13 @@ export default function Home() {
           <div className="space-y-4 pt-4 animate-in-up animate-in-up-delay-2">
             <Link
               href="/login"
-              className="block w-full text-center bg-[#FF6B35] hover:bg-[#E85520] text-white font-semibold py-3.5 px-6 rounded-lg transition-all hover:shadow-[0_0_25px_rgba(255,107,53,0.4)] hover:-translate-y-0.5"
+              className="block w-full text-center bg-[#ff7336] hover:bg-[#E85520] text-white font-semibold py-3.5 px-6 rounded-lg transition-all hover:shadow-[0_0_25px_rgba(255,115,54,0.4)] hover:-translate-y-0.5"
             >
               Entrar
             </Link>
             <Link
               href="/register"
-              className="block w-full text-center border-2 border-[#FF6B35] text-[#FF6B35] hover:bg-[#FF6B35] hover:text-white font-semibold py-3.5 px-6 rounded-lg transition-all hover:-translate-y-0.5 hover:shadow-[0_0_20px_rgba(255,107,53,0.25)]"
+              className="block w-full text-center border-2 border-[#ff7336] text-[#ff7336] hover:bg-[#ff7336] hover:text-white font-semibold py-3.5 px-6 rounded-lg transition-all hover:-translate-y-0.5 hover:shadow-[0_0_20px_rgba(255,115,54,0.25)]"
             >
               Criar Conta
             </Link>
