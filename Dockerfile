@@ -44,6 +44,9 @@ COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
 COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
 COPY --from=builder /app/node_modules/.bin ./node_modules/.bin
 
+# Copy WASM files to .bin directory (Prisma CLI expects them there)
+COPY --from=builder /app/node_modules/prisma/build/*.wasm ./node_modules/.bin/
+
 COPY start.sh ./start.sh
 
 ENV PATH="/app/node_modules/.bin:$PATH"
