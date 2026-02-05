@@ -51,14 +51,13 @@ export async function POST(request: NextRequest) {
     // For now, we'll log the token (in production, send via email service)
     const resetUrl = `${process.env.NEXT_PUBLIC_APP_URL}/reset-password?token=${resetToken}`
 
-    console.log('='.repeat(80))
-    console.log('PASSWORD RESET REQUESTED')
-    console.log('='.repeat(80))
-    console.log(`Email: ${email}`)
-    console.log(`Reset URL: ${resetUrl}`)
-    console.log(`Token: ${resetToken}`)
-    console.log(`Expires: ${expiresAt.toISOString()}`)
-    console.log('='.repeat(80))
+    if (process.env.NODE_ENV === 'development') {
+      console.log('='.repeat(80))
+      console.log('PASSWORD RESET REQUESTED')
+      console.log(`Email: ${email}`)
+      console.log(`Reset URL: ${resetUrl}`)
+      console.log('='.repeat(80))
+    }
 
     // In production, send email here
     // await sendPasswordResetEmail(user.email, resetUrl)

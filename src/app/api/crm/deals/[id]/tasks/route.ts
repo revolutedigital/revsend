@@ -1,13 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
-import { apiHandler } from "@/lib/api-handler";
+import { apiHandler, getDealsFilter } from "@/lib/api-handler";
 import { db } from "@/lib/db";
 
 export const GET = apiHandler(async (_req: NextRequest, { params, session }) => {
   const dealId = params?.id;
 
-  // Verificar se o deal pertence ao usuário
+  // Build filter with organizationId and role-based access
+  const baseFilter = getDealsFilter(session);
+
+  // Verificar se o deal pertence à organização do usuário
   const deal = await db.deal.findFirst({
-    where: { id: dealId, userId: session!.user.id },
+    where: { id: dealId, ...baseFilter },
   });
 
   if (!deal) {
@@ -28,16 +31,19 @@ export const GET = apiHandler(async (_req: NextRequest, { params, session }) => 
   });
 
   return NextResponse.json({ tasks });
-});
+}, { requiredPermission: "deals:read_own" });
 
 export const POST = apiHandler(async (req: NextRequest, { params, session }) => {
   const dealId = params?.id;
   const body = await req.json();
   const { title, description, dueDate, priority } = body;
 
-  // Verificar se o deal pertence ao usuário
+  // Build filter with organizationId and role-based access
+  const baseFilter = getDealsFilter(session);
+
+  // Verificar se o deal pertence à organização do usuário
   const deal = await db.deal.findFirst({
-    where: { id: dealId, userId: session!.user.id },
+    where: { id: dealId, ...baseFilter },
   });
 
   if (!deal) {
@@ -56,6 +62,7 @@ export const POST = apiHandler(async (req: NextRequest, { params, session }) => 
 
   const task = await db.dealTask.create({
     data: {
+      organizationId: session!.user.organizationId!,
       dealId: dealId!,
       userId: session!.user.id,
       title,
@@ -71,7 +78,7 @@ export const POST = apiHandler(async (req: NextRequest, { params, session }) => 
   });
 
   return NextResponse.json({ task });
-});
+}, { requiredPermission: "deals:update" });
 
 export const PUT = apiHandler(async (req: NextRequest, { params, session }) => {
   const dealId = params?.id;
@@ -85,12 +92,15 @@ export const PUT = apiHandler(async (req: NextRequest, { params, session }) => {
     );
   }
 
-  // Verificar se a tarefa pertence ao deal do usuário
+  // Build filter with organizationId and role-based access
+  const baseFilter = getDealsFilter(session);
+
+  // Verificar se a tarefa pertence ao deal da organização do usuário
   const task = await db.dealTask.findFirst({
     where: {
       id: taskId,
       dealId,
-      deal: { userId: session!.user.id },
+      deal: baseFilter,
     },
   });
 
@@ -116,6 +126,7 @@ export const PUT = apiHandler(async (req: NextRequest, { params, session }) => {
       // Criar atividade de tarefa concluída
       await db.dealActivity.create({
         data: {
+          organizationId: session!.user.organizationId!,
           dealId: dealId!,
           userId: session!.user.id,
           activityType: "task_completed",
@@ -139,7 +150,7 @@ export const PUT = apiHandler(async (req: NextRequest, { params, session }) => {
   });
 
   return NextResponse.json({ task: updatedTask });
-});
+}, { requiredPermission: "deals:update" });
 
 export const DELETE = apiHandler(async (req: NextRequest, { params, session }) => {
   const dealId = params?.id;
@@ -153,12 +164,15 @@ export const DELETE = apiHandler(async (req: NextRequest, { params, session }) =
     );
   }
 
-  // Verificar se a tarefa pertence ao deal do usuário
+  // Build filter with organizationId and role-based access
+  const baseFilter = getDealsFilter(session);
+
+  // Verificar se a tarefa pertence ao deal da organização do usuário
   const task = await db.dealTask.findFirst({
     where: {
       id: taskId,
       dealId,
-      deal: { userId: session!.user.id },
+      deal: baseFilter,
     },
   });
 
@@ -172,4 +186,4 @@ export const DELETE = apiHandler(async (req: NextRequest, { params, session }) =
   await db.dealTask.delete({ where: { id: taskId } });
 
   return NextResponse.json({ success: true });
-});
+}, { requiredPermission: "deals:delete" });

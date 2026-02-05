@@ -2,14 +2,14 @@ import { NextRequest, NextResponse } from "next/server";
 import { apiHandler } from "@/lib/api-handler";
 import { db } from "@/lib/db";
 
-// GET - Listar templates do usuário
+// GET - Listar templates da organização
 export const GET = apiHandler(async (req: NextRequest, { session }) => {
   const { searchParams } = new URL(req.url);
   const category = searchParams.get("category");
 
   const templates = await db.messageTemplate.findMany({
     where: {
-      userId: session!.user.id,
+      organizationId: session!.user.organizationId!,
       ...(category ? { category } : {}),
     },
     orderBy: [
@@ -19,7 +19,7 @@ export const GET = apiHandler(async (req: NextRequest, { session }) => {
   });
 
   return NextResponse.json({ templates });
-});
+}, { requiredPermission: "templates:read" });
 
 // POST - Criar novo template
 export const POST = apiHandler(async (req: NextRequest, { session }) => {
@@ -36,6 +36,7 @@ export const POST = apiHandler(async (req: NextRequest, { session }) => {
   const template = await db.messageTemplate.create({
     data: {
       userId: session!.user.id,
+      organizationId: session!.user.organizationId!,
       name,
       category: category || null,
       content,
@@ -46,4 +47,4 @@ export const POST = apiHandler(async (req: NextRequest, { session }) => {
   });
 
   return NextResponse.json({ template }, { status: 201 });
-});
+}, { requiredPermission: "templates:create" });

@@ -7,7 +7,7 @@ export const GET = apiHandler(async (_req: NextRequest, { params, session }) => 
   const campaign = await db.campaign.findFirst({
     where: {
       id: params?.id,
-      userId: session!.user.id,
+      organizationId: session!.user.organizationId!,
     },
     include: {
       list: {
@@ -65,14 +65,14 @@ export const GET = apiHandler(async (_req: NextRequest, { params, session }) => 
       replied: statsMap["replied"] || 0,
     },
   });
-});
+}, { requiredPermission: 'campaigns:read' });
 
 // DELETE - Excluir campanha
 export const DELETE = apiHandler(async (_req: NextRequest, { params, session }) => {
   const campaign = await db.campaign.findFirst({
     where: {
       id: params?.id,
-      userId: session!.user.id,
+      organizationId: session!.user.organizationId!,
     },
   });
 
@@ -95,4 +95,4 @@ export const DELETE = apiHandler(async (_req: NextRequest, { params, session }) 
   });
 
   return NextResponse.json({ success: true });
-});
+}, { requiredPermission: 'campaigns:delete' });

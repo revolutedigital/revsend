@@ -4,7 +4,7 @@ import { db } from "@/lib/db";
 
 export const GET = apiHandler(async (_req: NextRequest, { session }) => {
   const lists = await db.contactList.findMany({
-    where: { userId: session!.user.id },
+    where: { organizationId: session!.user.organizationId! },
     orderBy: { createdAt: "desc" },
     include: {
       _count: {
@@ -14,7 +14,7 @@ export const GET = apiHandler(async (_req: NextRequest, { session }) => {
   });
 
   return NextResponse.json({ lists });
-});
+}, { requiredPermission: "lists:read" });
 
 export const DELETE = apiHandler(async (req: NextRequest, { session }) => {
   const { searchParams } = new URL(req.url);
@@ -27,11 +27,11 @@ export const DELETE = apiHandler(async (req: NextRequest, { session }) => {
     );
   }
 
-  // Verificar se a lista pertence ao usuário
+  // Verificar se a lista pertence à organização
   const list = await db.contactList.findFirst({
     where: {
       id: listId,
-      userId: session!.user.id,
+      organizationId: session!.user.organizationId!,
     },
   });
 
@@ -48,4 +48,4 @@ export const DELETE = apiHandler(async (req: NextRequest, { session }) => {
   });
 
   return NextResponse.json({ success: true });
-});
+}, { requiredPermission: "lists:delete" });

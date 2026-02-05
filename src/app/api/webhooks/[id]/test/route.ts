@@ -39,6 +39,36 @@ export async function POST(
       },
     };
 
+    // SSRF protection: block private/internal URLs
+    const webhookUrl = new URL(webhook.url);
+    const hostname = webhookUrl.hostname.toLowerCase();
+    const blockedPatterns = [
+      /^localhost$/i,
+      /^127\./,
+      /^10\./,
+      /^172\.(1[6-9]|2\d|3[01])\./,
+      /^192\.168\./,
+      /^0\./,
+      /^169\.254\./,
+      /^::1$/,
+      /^fc00:/i,
+      /^fe80:/i,
+      /\.local$/i,
+      /\.internal$/i,
+    ];
+    if (blockedPatterns.some((p) => p.test(hostname))) {
+      return NextResponse.json(
+        { error: "URL não permitida: endereços internos são bloqueados" },
+        { status: 400 }
+      );
+    }
+    if (!["https:", "http:"].includes(webhookUrl.protocol)) {
+      return NextResponse.json(
+        { error: "Apenas URLs HTTP/HTTPS são permitidas" },
+        { status: 400 }
+      );
+    }
+
     const payloadString = JSON.stringify(payload);
 
     const headers: Record<string, string> = {

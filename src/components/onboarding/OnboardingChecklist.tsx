@@ -5,15 +5,25 @@ import { Button } from '@/components/ui/button'
 import { Progress } from '@/components/ui/progress'
 import { cn } from '@/lib/utils'
 import { Check, ChevronDown, ChevronUp, Circle, Rocket, X } from 'lucide-react'
-import { ONBOARDING_STEPS, useOnboarding } from '@/hooks/use-onboarding'
+import { useOnboarding } from '@/hooks/use-onboarding'
 import Link from 'next/link'
 
 const STEP_LINKS: Record<string, string> = {
+  // Gerente steps
   'welcome': '/dashboard',
   'connect-whatsapp': '/dashboard/whatsapp',
   'create-list': '/dashboard/lists',
   'create-campaign': '/dashboard/campaigns/new',
   'send-message': '/dashboard/campaigns',
+  // Vendedor steps
+  'welcome-vendedor': '/dashboard',
+  'view-deals': '/dashboard/crm',
+  'view-pipeline': '/dashboard/crm',
+  'view-campaigns': '/dashboard/campaigns',
+  // Master steps
+  'welcome-master': '/dashboard',
+  'admin-panel': '/dashboard/admin',
+  'org-management': '/dashboard/admin/organizations',
 }
 
 export function OnboardingChecklist() {
@@ -24,6 +34,7 @@ export function OnboardingChecklist() {
     progress,
     skipOnboarding,
     isStepCompleted,
+    steps,
   } = useOnboarding()
 
   const [isExpanded, setIsExpanded] = useState(true)
@@ -51,7 +62,7 @@ export function OnboardingChecklist() {
           <div>
             <h3 className="font-semibold text-white">Primeiros passos</h3>
             <p className="text-sm text-slate-400">
-              {completedSteps.length}/{ONBOARDING_STEPS.length} concluídos
+              {completedSteps.length}/{steps.length} concluídos
             </p>
           </div>
         </div>
@@ -73,7 +84,7 @@ export function OnboardingChecklist() {
       {/* Content */}
       {isExpanded && (
         <div id="onboarding-content" className="p-4 pt-3 space-y-2">
-          {ONBOARDING_STEPS.map((step, index) => {
+          {steps.map((step, index) => {
             const isComplete = isStepCompleted(step.id)
             const isCurrent = completedSteps.length === index
 

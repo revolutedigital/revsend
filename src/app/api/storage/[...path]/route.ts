@@ -2,20 +2,37 @@ import { NextRequest, NextResponse } from 'next/server'
 import { readFile } from 'fs/promises'
 import { existsSync } from 'fs'
 import path from 'path'
+import { auth } from '@/lib/auth'
 
-const STORAGE_DIR = process.env.STORAGE_DIR || path.join(process.cwd(), 'storage')
+const STORAGE_DIR = path.resolve(process.env.STORAGE_DIR || path.join(process.cwd(), 'storage'))
 
 export async function GET(
   request: NextRequest,
   { params }: { params: { path: string[] } }
 ) {
   try {
-    // Get file path from params
-    const filePath = params.path.join('/')
-    const fullPath = path.join(STORAGE_DIR, filePath)
+    // Auth check
+    const session = await auth()
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
 
-    // Security: prevent directory traversal
-    if (!fullPath.startsWith(STORAGE_DIR)) {
+    // Reject path segments with traversal attempts
+    const filePath = params.path.join('/')
+    if (filePath.includes('..') || filePath.includes('\0')) {
+      return NextResponse.json({ error: 'Invalid path' }, { status: 400 })
+    }
+
+    // IDOR protection: files are stored as {prefix}/{organizationId}/..., verify ownership
+    const pathParts = filePath.split('/')
+    if (pathParts.length >= 2 && pathParts[1] !== session.user.currentOrgId) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+    }
+
+    const fullPath = path.resolve(STORAGE_DIR, filePath)
+
+    // Security: prevent directory traversal (use resolved paths)
+    if (!fullPath.startsWith(STORAGE_DIR + path.sep) && fullPath !== STORAGE_DIR) {
       return NextResponse.json({ error: 'Invalid path' }, { status: 400 })
     }
 

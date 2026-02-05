@@ -1,14 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
-import { apiHandler } from "@/lib/api-handler";
+import { apiHandler, getDealsFilter } from "@/lib/api-handler";
 import { db } from "@/lib/db";
 
 export const GET = apiHandler(async (_req: NextRequest, { params, session }) => {
   const id = params?.id;
 
+  // Build filter with organizationId and role-based access
+  const baseFilter = getDealsFilter(session);
+
   const deal = await db.deal.findFirst({
     where: {
       id,
-      userId: session!.user.id,
+      ...baseFilter,
     },
     include: {
       contact: {
@@ -59,15 +62,18 @@ export const GET = apiHandler(async (_req: NextRequest, { params, session }) => 
   }
 
   return NextResponse.json({ deal });
-});
+}, { requiredPermission: "deals:read_own" });
 
 export const PUT = apiHandler(async (req: NextRequest, { params, session }) => {
   const id = params?.id;
   const body = await req.json();
 
+  // Build filter with organizationId and role-based access
+  const baseFilter = getDealsFilter(session);
+
   // Verificar se o deal existe
   const existingDeal = await db.deal.findFirst({
-    where: { id, userId: session!.user.id },
+    where: { id, ...baseFilter },
     include: { stage: { select: { name: true } } },
   });
 
@@ -94,6 +100,7 @@ export const PUT = apiHandler(async (req: NextRequest, { params, session }) => {
   // Preparar dados de atualização
   const updateData: Record<string, unknown> = {};
   const activities: Array<{
+    organizationId: string;
     dealId: string;
     userId: string;
     activityType: string;
@@ -117,7 +124,7 @@ export const PUT = apiHandler(async (req: NextRequest, { params, session }) => {
   // Mudança de estágio
   if (stageId && stageId !== existingDeal.stageId) {
     const newStage = await db.pipelineStage.findFirst({
-      where: { id: stageId, userId: session!.user.id },
+      where: { id: stageId, organizationId: session!.user.organizationId! },
     });
 
     if (!newStage) {
@@ -148,6 +155,7 @@ export const PUT = apiHandler(async (req: NextRequest, { params, session }) => {
     }
 
     activities.push({
+      organizationId: session!.user.organizationId!,
       dealId: id!,
       userId: session!.user.id,
       activityType: "stage_change",
@@ -191,13 +199,16 @@ export const PUT = apiHandler(async (req: NextRequest, { params, session }) => {
   }
 
   return NextResponse.json({ deal });
-});
+}, { requiredPermission: "deals:update" });
 
 export const DELETE = apiHandler(async (_req: NextRequest, { params, session }) => {
   const id = params?.id;
 
+  // Build filter with organizationId and role-based access
+  const baseFilter = getDealsFilter(session);
+
   const deal = await db.deal.findFirst({
-    where: { id, userId: session!.user.id },
+    where: { id, ...baseFilter },
   });
 
   if (!deal) {
@@ -210,4 +221,4 @@ export const DELETE = apiHandler(async (_req: NextRequest, { params, session }) 
   await db.deal.delete({ where: { id } });
 
   return NextResponse.json({ success: true });
-});
+}, { requiredPermission: "deals:delete" });

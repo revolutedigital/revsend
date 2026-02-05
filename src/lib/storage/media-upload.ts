@@ -6,6 +6,7 @@ export type MediaType = 'image' | 'audio' | 'video'
 
 export interface MediaUploadOptions {
   userId: string
+  organizationId: string
   file: Buffer
   filename: string
   type: MediaType
@@ -80,7 +81,7 @@ export async function optimizeImage(buffer: Buffer): Promise<{ buffer: Buffer; c
  * Upload media file
  */
 export async function uploadMedia(options: MediaUploadOptions): Promise<UploadResult & { mediaId: string }> {
-  const { userId, file, filename, type, originalMimeType } = options
+  const { userId, organizationId, file, filename, type, originalMimeType } = options
 
   // Determine MIME type
   const mimeType = originalMimeType || 'application/octet-stream'
@@ -103,7 +104,7 @@ export async function uploadMedia(options: MediaUploadOptions): Promise<UploadRe
 
   // Upload to storage
   const uploadResult = await uploadFile({
-    userId,
+    organizationId,
     file: uploadBuffer,
     filename,
     contentType: uploadContentType,
@@ -114,6 +115,7 @@ export async function uploadMedia(options: MediaUploadOptions): Promise<UploadRe
   const mediaFile = await db.mediaFile.create({
     data: {
       userId,
+      organizationId,
       url: uploadResult.url,
       filename,
       originalName: filename,
@@ -172,12 +174,12 @@ export async function getMediaInfo(mediaId: string) {
 }
 
 /**
- * List user media files
+ * List organization media files
  */
-export async function listUserMedia(userId: string, type?: MediaType) {
+export async function listUserMedia(organizationId: string, type?: MediaType) {
   return db.mediaFile.findMany({
     where: {
-      userId,
+      organizationId,
       ...(type && { type }),
     },
     orderBy: {

@@ -3,6 +3,7 @@ import { db as prisma } from '@/lib/db'
 import { isResetTokenExpired, validatePasswordStrength } from '@/lib/auth/password-reset'
 import bcrypt from 'bcryptjs'
 import { createAuditLogFromRequest } from '@/lib/audit/audit-logger'
+import { rateLimit, RATE_LIMITS, getRateLimitIdentifier } from '@/lib/rate-limit'
 
 /**
  * POST /api/auth/reset-password
@@ -10,6 +11,16 @@ import { createAuditLogFromRequest } from '@/lib/audit/audit-logger'
  */
 export async function POST(request: NextRequest) {
   try {
+    // Rate limiting
+    const identifier = getRateLimitIdentifier(request)
+    const rl = await rateLimit(`reset-password:${identifier}`, RATE_LIMITS.LOGIN)
+    if (!rl.success) {
+      return NextResponse.json(
+        { error: 'Too many attempts. Please try again later.' },
+        { status: 429 }
+      )
+    }
+
     const body = await request.json()
     const { token, password } = body
 
@@ -44,7 +55,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Hash new password
-    const passwordHash = await bcrypt.hash(password, 10)
+    const passwordHash = await bcrypt.hash(password, 12)
 
     // Update password and clear reset token
     await prisma.user.update({

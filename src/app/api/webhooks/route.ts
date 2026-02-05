@@ -15,12 +15,17 @@ const WEBHOOK_EVENTS = [
 // GET - Listar webhooks do usuário
 export const GET = apiHandler(async (_req: NextRequest, { session }) => {
   const webhooks = await db.webhook.findMany({
-    where: { userId: session!.user.id },
+    where: { organizationId: session!.user.organizationId! },
     orderBy: { createdAt: "desc" },
   });
 
-  return NextResponse.json({ webhooks, availableEvents: WEBHOOK_EVENTS });
-});
+  const sanitizedWebhooks = webhooks.map(({ secret, ...rest }) => ({
+    ...rest,
+    hasSecret: !!secret,
+  }));
+
+  return NextResponse.json({ webhooks: sanitizedWebhooks, availableEvents: WEBHOOK_EVENTS });
+}, { requiredPermission: "webhooks:read" });
 
 // POST - Criar novo webhook
 export const POST = apiHandler(async (req: NextRequest, { session }) => {
@@ -35,11 +40,26 @@ export const POST = apiHandler(async (req: NextRequest, { session }) => {
   }
 
   // Validar URL
+  let parsedUrl: URL;
   try {
-    new URL(url);
+    parsedUrl = new URL(url);
   } catch {
     return NextResponse.json(
       { error: "URL inválida" },
+      { status: 400 }
+    );
+  }
+
+  // SSRF protection
+  const hostname = parsedUrl.hostname.toLowerCase();
+  const blockedPatterns = [
+    /^localhost$/i, /^127\./, /^10\./, /^172\.(1[6-9]|2\d|3[01])\./,
+    /^192\.168\./, /^0\./, /^169\.254\./, /^::1$/, /^fc00:/i, /^fe80:/i,
+    /\.local$/i, /\.internal$/i,
+  ];
+  if (blockedPatterns.some((p) => p.test(hostname)) || !["https:", "http:"].includes(parsedUrl.protocol)) {
+    return NextResponse.json(
+      { error: "URL não permitida: endereços internos são bloqueados" },
       { status: 400 }
     );
   }
@@ -55,7 +75,7 @@ export const POST = apiHandler(async (req: NextRequest, { session }) => {
 
   // Limitar quantidade de webhooks
   const count = await db.webhook.count({
-    where: { userId: session!.user.id },
+    where: { organizationId: session!.user.organizationId! },
   });
 
   if (count >= 10) {
@@ -73,6 +93,7 @@ export const POST = apiHandler(async (req: NextRequest, { session }) => {
   const webhook = await db.webhook.create({
     data: {
       userId: session!.user.id,
+      organizationId: session!.user.organizationId!,
       name,
       url,
       events,
@@ -81,4 +102,4 @@ export const POST = apiHandler(async (req: NextRequest, { session }) => {
   });
 
   return NextResponse.json({ webhook }, { status: 201 });
-});
+}, { requiredPermission: "webhooks:create" });

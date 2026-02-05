@@ -3,9 +3,13 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { signOut } from "next-auth/react";
-import { RevSendLogoCompact } from "@/components/logo/RevSendLogo";
+import { signOut, useSession } from "next-auth/react";
+import { RevSendMascotMini } from "@/components/logo/RevSendMascot";
+import { OrgSelector } from "./OrgSelector";
+import { NotificationBell } from "./NotificationBell";
 import { cn } from "@/lib/utils";
+import { usePermission } from "@/hooks/use-permission";
+import { Action } from "@/lib/permissions";
 import {
   LayoutDashboard,
   Users,
@@ -19,10 +23,29 @@ import {
   Menu,
   X,
   ChevronDown,
+  Shield,
+  Building2,
+  UserCog,
+  Tags,
+  Ban,
 } from "lucide-react";
 
-// Menu organizado por grupos
-const menuGroups = [
+interface MenuItem {
+  label: string;
+  href: string;
+  icon: React.ComponentType<{ className?: string }>;
+  badge?: boolean;
+  permission?: Action;
+}
+
+interface MenuGroup {
+  label: string;
+  items: MenuItem[];
+  permission?: Action;
+}
+
+// Menu organizado por grupos com permissões
+const menuGroups: MenuGroup[] = [
   {
     label: "Principal",
     items: [
@@ -40,11 +63,19 @@ const menuGroups = [
         label: "Pipeline",
         href: "/pipeline",
         icon: Kanban,
+        permission: "deals:read_own",
       },
       {
         label: "Listas",
         href: "/lists",
         icon: Users,
+        permission: "lists:read",
+      },
+      {
+        label: "Tags",
+        href: "/tags",
+        icon: Tags,
+        permission: "tags:read",
       },
     ],
   },
@@ -55,17 +86,20 @@ const menuGroups = [
         label: "Campanhas",
         href: "/campaigns",
         icon: Send,
+        permission: "campaigns:read",
       },
       {
         label: "Templates",
         href: "/templates",
         icon: FileText,
+        permission: "templates:read",
       },
       {
         label: "Respostas",
         href: "/replies",
         icon: MessageSquare,
-        badge: true, // Mostra badge de notificacao
+        badge: true,
+        permission: "campaigns:read",
       },
     ],
   },
@@ -76,11 +110,36 @@ const menuGroups = [
         label: "Relatorios",
         href: "/reports",
         icon: BarChart3,
+        permission: "reports:read_own",
+      },
+      {
+        label: "Blacklist",
+        href: "/blacklist",
+        icon: Ban,
+        permission: "blacklist:read",
       },
       {
         label: "Configuracoes",
         href: "/settings",
         icon: Settings,
+      },
+    ],
+  },
+  {
+    label: "Admin",
+    permission: "admin:access",
+    items: [
+      {
+        label: "Organizacoes",
+        href: "/admin/organizations",
+        icon: Building2,
+        permission: "admin:orgs",
+      },
+      {
+        label: "Usuarios",
+        href: "/admin/users",
+        icon: UserCog,
+        permission: "admin:users",
       },
     ],
   },
@@ -114,9 +173,11 @@ interface SidebarProps {
 
 export function Sidebar({ collapsed = false }: SidebarProps) {
   const pathname = usePathname();
+  const { data: session } = useSession();
+  const { can, role, isMaster } = usePermission();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [unreadReplies, setUnreadReplies] = useState(0);
-  const [expandedGroups, setExpandedGroups] = useState<string[]>(["Principal", "CRM", "Marketing", "Sistema"]);
+  const [expandedGroups, setExpandedGroups] = useState<string[]>(["Principal", "CRM", "Marketing", "Sistema", "Admin"]);
 
   // Buscar contagem de respostas nao lidas
   useEffect(() => {
@@ -132,11 +193,13 @@ export function Sidebar({ collapsed = false }: SidebarProps) {
       }
     };
 
-    fetchUnreadReplies();
-    // Atualizar a cada 30 segundos
-    const interval = setInterval(fetchUnreadReplies, 30000);
-    return () => clearInterval(interval);
-  }, []);
+    if (session?.user?.currentOrgId) {
+      fetchUnreadReplies();
+      // Atualizar a cada 30 segundos
+      const interval = setInterval(fetchUnreadReplies, 30000);
+      return () => clearInterval(interval);
+    }
+  }, [session?.user?.currentOrgId]);
 
   // Fechar menu mobile ao mudar de rota
   useEffect(() => {
@@ -160,31 +223,67 @@ export function Sidebar({ collapsed = false }: SidebarProps) {
     );
   };
 
+  // Filter menu groups based on permissions
+  const visibleGroups = menuGroups
+    .filter((group) => {
+      if (group.permission && !can(group.permission)) return false;
+      return true;
+    })
+    .map((group) => ({
+      ...group,
+      items: group.items.filter((item) => {
+        if (item.permission && !can(item.permission)) return false;
+        return true;
+      }),
+    }))
+    .filter((group) => group.items.length > 0);
+
   const SidebarContent = () => (
     <div className="relative flex h-full flex-col">
       {/* Logo */}
       <div className="flex items-center justify-between gap-3 px-4 py-4 border-b border-navy-400/30">
         <div className="flex items-center gap-3">
-          <RevSendLogoCompact className="w-9 h-9" />
+          <RevSendMascotMini className="w-9 h-9" />
           {!collapsed && (
             <span className="text-lg font-display font-bold text-white">
               Rev<span className="text-[#ff7336]">Send</span>
             </span>
           )}
         </div>
-        {/* Botao fechar mobile */}
-        <button
-          onClick={() => setMobileOpen(false)}
-          className="lg:hidden p-2 rounded-lg text-navy-200 hover:bg-navy-400/50 hover:text-white transition-colors"
-          aria-label="Fechar menu"
-        >
-          <X className="h-5 w-5" aria-hidden="true" />
-        </button>
+        {/* Notification bell + Mobile close */}
+        <div className="flex items-center gap-2">
+          {!collapsed && <NotificationBell />}
+          <button
+            onClick={() => setMobileOpen(false)}
+            className="lg:hidden p-2 rounded-lg text-navy-200 hover:bg-navy-400/50 hover:text-white transition-colors"
+            aria-label="Fechar menu"
+          >
+            <X className="h-5 w-5" aria-hidden="true" />
+          </button>
+        </div>
       </div>
+
+      {/* Organization Selector */}
+      <OrgSelector collapsed={collapsed} />
+
+      {/* Role badge */}
+      {!collapsed && session?.user && (
+        <div className="px-4 pb-2">
+          <div className={cn(
+            "inline-flex items-center gap-1.5 px-2 py-1 rounded text-xs font-medium",
+            isMaster && "bg-purple-500/20 text-purple-300",
+            role === "gerente" && "bg-blue-500/20 text-blue-300",
+            role === "vendedor" && "bg-green-500/20 text-green-300"
+          )}>
+            <Shield className="h-3 w-3" />
+            {isMaster ? "Master" : role === "gerente" ? "Gerente" : "Vendedor"}
+          </div>
+        </div>
+      )}
 
       {/* Menu com grupos */}
       <nav className="flex-1 px-3 py-4 space-y-4 overflow-y-auto" aria-label="Menu principal">
-        {menuGroups.map((group) => {
+        {visibleGroups.map((group) => {
           const isExpanded = expandedGroups.includes(group.label);
           const groupId = `nav-group-${group.label.toLowerCase().replace(/\s+/g, '-')}`;
 

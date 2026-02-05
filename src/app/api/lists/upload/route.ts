@@ -16,6 +16,15 @@ export const POST = apiHandler(async (req: NextRequest, { session }) => {
     );
   }
 
+  // Limit file size to 10MB
+  const MAX_FILE_SIZE = 10 * 1024 * 1024;
+  if (file.size > MAX_FILE_SIZE) {
+    return NextResponse.json(
+      { error: "Arquivo muito grande. Limite de 10MB." },
+      { status: 400 }
+    );
+  }
+
   // Ler o arquivo
   const buffer = await file.arrayBuffer();
   const workbook = XLSX.read(buffer, { type: "array" });
@@ -49,6 +58,7 @@ export const POST = apiHandler(async (req: NextRequest, { session }) => {
   const list = await db.contactList.create({
     data: {
       userId: session!.user.id,
+      organizationId: session!.user.organizationId!,
       name: listName || file.name.replace(/\.[^/.]+$/, ""),
       originalFilename: file.name,
       totalContacts: jsonData.length,
@@ -110,4 +120,4 @@ export const POST = apiHandler(async (req: NextRequest, { session }) => {
       fields: normalization.fields,
     },
   });
-});
+}, { requiredPermission: "lists:create" });

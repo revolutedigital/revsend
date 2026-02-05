@@ -3,6 +3,8 @@ import { apiHandler } from "@/lib/api-handler";
 import { db } from "@/lib/db";
 
 export const GET = apiHandler(async (_req: NextRequest, { session }) => {
+  const organizationId = session!.user.organizationId!;
+
   // Estatísticas gerais
   const [
     totalCampaigns,
@@ -12,25 +14,25 @@ export const GET = apiHandler(async (_req: NextRequest, { session }) => {
     totalReplies,
   ] = await Promise.all([
     db.campaign.count({
-      where: { userId: session!.user.id },
+      where: { organizationId },
     }),
     db.campaign.count({
-      where: { userId: session!.user.id, status: "completed" },
+      where: { organizationId, status: "completed" },
     }),
     db.contact.count({
       where: {
-        list: { userId: session!.user.id },
+        list: { organizationId },
       },
     }),
     db.sentMessage.count({
       where: {
-        campaign: { userId: session!.user.id },
+        campaign: { organizationId },
         status: "sent",
       },
     }),
     db.reply.count({
       where: {
-        campaign: { userId: session!.user.id },
+        campaign: { organizationId },
       },
     }),
   ]);
@@ -38,7 +40,7 @@ export const GET = apiHandler(async (_req: NextRequest, { session }) => {
   // Estatísticas por campanha
   const campaignStats = await db.campaign.findMany({
     where: {
-      userId: session!.user.id,
+      organizationId,
       status: { in: ["completed", "running"] },
     },
     select: {
@@ -64,7 +66,7 @@ export const GET = apiHandler(async (_req: NextRequest, { session }) => {
   const whatsappStats = await db.campaignNumber.groupBy({
     by: ["whatsappNumberId"],
     where: {
-      campaign: { userId: session!.user.id },
+      campaign: { organizationId },
     },
     _sum: {
       messagesSent: true,
@@ -121,4 +123,4 @@ export const GET = apiHandler(async (_req: NextRequest, { session }) => {
     })),
     whatsappStats: whatsappStatsWithNames,
   });
-});
+}, { requiredPermission: "reports:read" });

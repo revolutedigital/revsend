@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { verifyTwoFactorToken, verifyBackupCode } from '@/lib/auth/2fa'
+import { verifyTwoFactorToken, verifyBackupCode, decryptTwoFactorSecret } from '@/lib/auth/2fa'
 import { db as prisma } from '@/lib/db'
 import { createAuditLogFromRequest } from '@/lib/audit/audit-logger'
+import { rateLimit, RATE_LIMITS, getRateLimitIdentifier } from '@/lib/rate-limit'
 
 /**
  * POST /api/auth/2fa/validate
@@ -9,6 +10,13 @@ import { createAuditLogFromRequest } from '@/lib/audit/audit-logger'
  */
 export async function POST(request: NextRequest) {
   try {
+    // Rate limiting
+    const identifier = getRateLimitIdentifier(request)
+    const rl = await rateLimit(`2fa-validate:${identifier}`, RATE_LIMITS.LOGIN)
+    if (!rl.success) {
+      return NextResponse.json({ error: 'Too many attempts. Please try again later.' }, { status: 429 })
+    }
+
     const body = await request.json()
     const { email, token, isBackupCode } = body
 
@@ -68,8 +76,9 @@ export async function POST(request: NextRequest) {
       })
     }
 
-    // Verify the TOTP token
-    const isValid = verifyTwoFactorToken(user.twoFactorSecret, token)
+    // Decrypt and verify the TOTP token
+    const decryptedSecret = decryptTwoFactorSecret(user.twoFactorSecret)
+    const isValid = verifyTwoFactorToken(decryptedSecret, token)
 
     if (!isValid) {
       return NextResponse.json({ error: 'Invalid token' }, { status: 400 })

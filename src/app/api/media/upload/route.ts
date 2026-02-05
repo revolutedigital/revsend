@@ -37,6 +37,7 @@ export const POST = apiHandler(async (req: NextRequest, { session }) => {
   // Upload media to R2
   const result = await uploadMedia({
     userId: session!.user.id,
+    organizationId: session!.user.organizationId!,
     file: buffer,
     filename: file.name,
     type,
@@ -52,18 +53,18 @@ export const POST = apiHandler(async (req: NextRequest, { session }) => {
     mediaType: type,
     size: result.size,
   })
-})
+}, { requiredPermission: 'media:upload' })
 
 export const GET = apiHandler(async (req: NextRequest, { session }) => {
   // Get query params
   const searchParams = req.nextUrl.searchParams
   const type = searchParams.get('type') as MediaType | null
 
-  // List user media
+  // List organization media
   const files = await listUserMedia(
-    session!.user.id,
+    session!.user.organizationId!,
     type || undefined
   )
 
   return NextResponse.json({ files })
-})
+}, { requiredPermission: 'media:read' })

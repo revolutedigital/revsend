@@ -17,7 +17,7 @@ export default function DashboardError({
         </div>
         <h2 className="text-lg font-semibold text-white">Algo deu errado</h2>
         <p className="text-sm text-navy-300">
-          {error.message || 'Ocorreu um erro inesperado. Tente novamente.'}
+          Ocorreu um erro inesperado. Tente novamente.
         </p>
         <Button onClick={reset} variant="outline" size="sm">
           Tentar novamente

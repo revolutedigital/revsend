@@ -7,7 +7,7 @@ export const POST = apiHandler(async (_req: NextRequest, { params, session }) =>
   const campaign = await db.campaign.findFirst({
     where: {
       id: params?.id,
-      userId: session!.user.id,
+      organizationId: session!.user.organizationId!,
     },
   });
 
@@ -28,4 +28,4 @@ export const POST = apiHandler(async (_req: NextRequest, { params, session }) =>
   await pauseCampaign(params!.id);
 
   return NextResponse.json({ success: true });
-});
+}, { requiredPermission: 'campaigns:start' });

@@ -8,7 +8,7 @@ const STORAGE_DIR = process.env.STORAGE_DIR || path.join(process.cwd(), 'storage
 const PUBLIC_URL = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
 
 export interface UploadOptions {
-  userId: string
+  organizationId: string
   file: Buffer
   filename: string
   contentType: string
@@ -37,23 +37,24 @@ async function ensureStorageDir(subdir?: string): Promise<string> {
 
 /**
  * Generate a unique key for a file
+ * Files are organized by organization for proper multi-tenant separation
  */
-export function generateFileKey(userId: string, filename: string, prefix: string = 'media'): string {
+export function generateFileKey(organizationId: string, filename: string, prefix: string = 'media'): string {
   const timestamp = Date.now()
   const randomStr = Math.random().toString(36).substring(2, 8)
   const sanitizedFilename = filename.replace(/[^a-zA-Z0-9.-]/g, '_')
 
-  return `${prefix}/${userId}/${timestamp}-${randomStr}-${sanitizedFilename}`
+  return `${prefix}/${organizationId}/${timestamp}-${randomStr}-${sanitizedFilename}`
 }
 
 /**
  * Upload a file to local storage
  */
 export async function uploadFile(options: UploadOptions): Promise<UploadResult> {
-  const { userId, file, filename, contentType, prefix = 'media' } = options
+  const { organizationId, file, filename, contentType, prefix = 'media' } = options
 
-  // Generate unique key
-  const key = generateFileKey(userId, filename, prefix)
+  // Generate unique key (organized by organization for multi-tenant separation)
+  const key = generateFileKey(organizationId, filename, prefix)
   const filePath = path.join(STORAGE_DIR, key)
 
   // Ensure directory exists

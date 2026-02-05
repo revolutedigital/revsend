@@ -1,27 +1,55 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { auth } from '@/lib/auth'
-import { getUserAuditLogs, getAuditLogStats } from '@/lib/audit/audit-logger'
+import { apiHandler } from '@/lib/api-handler'
+import {
+  getOrganizationAuditLogs,
+  getOrganizationAuditLogStats,
+  getAllAuditLogs,
+  getAuditLogStats,
+} from '@/lib/audit/audit-logger'
 
 /**
  * GET /api/audit-logs
- * Get audit logs for current user
+ * Get audit logs for current organization
+ * Master users can see all logs across all organizations
  */
-export async function GET(request: NextRequest) {
-  try {
-    const session = await auth()
-
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-
+export const GET = apiHandler(
+  async (request: NextRequest, { session }) => {
     const { searchParams } = new URL(request.url)
     const limit = parseInt(searchParams.get('limit') || '50')
     const offset = parseInt(searchParams.get('offset') || '0')
     const action = searchParams.get('action') || undefined
 
+    // Master users can see all logs across all organizations
+    if (session!.user.isMaster) {
+      const [logs, stats] = await Promise.all([
+        getAllAuditLogs({ limit, offset, action }),
+        getAuditLogStats(),
+      ])
+
+      return NextResponse.json({
+        logs,
+        stats,
+        pagination: {
+          limit,
+          offset,
+          total: stats.total,
+        },
+      })
+    }
+
+    // Regular users see only their organization's logs
+    const organizationId = session!.user.organizationId
+
+    if (!organizationId) {
+      return NextResponse.json(
+        { error: 'Você precisa estar em uma organização para ver os logs' },
+        { status: 403 }
+      )
+    }
+
     const [logs, stats] = await Promise.all([
-      getUserAuditLogs(session.user.id, { limit, offset, action }),
-      getAuditLogStats(session.user.id),
+      getOrganizationAuditLogs(organizationId, { limit, offset, action }),
+      getOrganizationAuditLogStats(organizationId),
     ])
 
     return NextResponse.json({
@@ -33,8 +61,6 @@ export async function GET(request: NextRequest) {
         total: stats.total,
       },
     })
-  } catch (error) {
-    console.error('Error fetching audit logs:', error)
-    return NextResponse.json({ error: 'Failed to fetch audit logs' }, { status: 500 })
-  }
-}
+  },
+  { requiredPermission: 'audit:read' }
+)

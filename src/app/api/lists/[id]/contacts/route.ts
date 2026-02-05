@@ -4,15 +4,16 @@ import { db } from "@/lib/db";
 
 export const GET = apiHandler(async (req: NextRequest, { params, session }) => {
   const { searchParams } = new URL(req.url);
-  const page = parseInt(searchParams.get("page") || "1");
-  const limit = parseInt(searchParams.get("limit") || "50");
+  const page = Math.max(1, parseInt(searchParams.get("page") || "1"));
+  const limit = Math.min(200, Math.max(1, parseInt(searchParams.get("limit") || "50")));
   const search = searchParams.get("search") || "";
+  const tagsParam = searchParams.get("tags") || "";
 
-  // Verificar se a lista pertence ao usuário
+  // Verificar se a lista pertence à organização
   const list = await db.contactList.findFirst({
     where: {
       id: params?.id,
-      userId: session!.user.id,
+      organizationId: session!.user.organizationId!,
     },
   });
 
@@ -23,8 +24,11 @@ export const GET = apiHandler(async (req: NextRequest, { params, session }) => {
     );
   }
 
+  // Parse tags filter (comma-separated tag IDs or names)
+  const tagFilters = tagsParam ? tagsParam.split(",").map((t) => t.trim()).filter(Boolean) : [];
+
   // Buscar contatos com paginação
-  const where = {
+  const where: Record<string, unknown> = {
     listId: params?.id,
     ...(search
       ? {
@@ -32,6 +36,23 @@ export const GET = apiHandler(async (req: NextRequest, { params, session }) => {
             { name: { contains: search, mode: "insensitive" as const } },
             { phoneNumber: { contains: search } },
           ],
+        }
+      : {}),
+    // Filter by tags if provided (contacts that have ALL specified tags)
+    ...(tagFilters.length > 0
+      ? {
+          AND: tagFilters.map((tagFilter) => ({
+            tags: {
+              some: {
+                tag: {
+                  OR: [
+                    { id: tagFilter },
+                    { name: { equals: tagFilter, mode: "insensitive" as const } },
+                  ],
+                },
+              },
+            },
+          })),
         }
       : {}),
   };
@@ -42,12 +63,25 @@ export const GET = apiHandler(async (req: NextRequest, { params, session }) => {
       skip: (page - 1) * limit,
       take: limit,
       orderBy: { createdAt: "desc" },
+      include: {
+        tags: {
+          include: {
+            tag: true,
+          },
+        },
+      },
     }),
     db.contact.count({ where }),
   ]);
 
+  // Transform contacts to include flat tags array
+  const contactsWithTags = contacts.map((contact) => ({
+    ...contact,
+    tags: contact.tags.map((ct) => ct.tag),
+  }));
+
   return NextResponse.json({
-    contacts,
+    contacts: contactsWithTags,
     pagination: {
       page,
       limit,
@@ -55,4 +89,4 @@ export const GET = apiHandler(async (req: NextRequest, { params, session }) => {
       pages: Math.ceil(total / limit),
     },
   });
-});
+}, { requiredPermission: "lists:read" });

@@ -1,13 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
-import { apiHandler } from "@/lib/api-handler";
+import { apiHandler, getDealsFilter } from "@/lib/api-handler";
 import { db } from "@/lib/db";
 
 export const GET = apiHandler(async (req: NextRequest, { params, session }) => {
   const dealId = params?.id;
 
-  // Verificar se o deal pertence ao usuário
+  // Build filter with organizationId and role-based access
+  const baseFilter = getDealsFilter(session);
+
+  // Verificar se o deal pertence à organização do usuário
   const deal = await db.deal.findFirst({
-    where: { id: dealId, userId: session!.user.id },
+    where: { id: dealId, ...baseFilter },
   });
 
   if (!deal) {
@@ -18,8 +21,8 @@ export const GET = apiHandler(async (req: NextRequest, { params, session }) => {
   }
 
   const { searchParams } = new URL(req.url);
-  const page = parseInt(searchParams.get("page") || "1");
-  const limit = parseInt(searchParams.get("limit") || "50");
+  const page = Math.max(1, parseInt(searchParams.get("page") || "1"));
+  const limit = Math.min(200, Math.max(1, parseInt(searchParams.get("limit") || "50")));
 
   const [activities, total] = await Promise.all([
     db.dealActivity.findMany({
@@ -45,16 +48,19 @@ export const GET = apiHandler(async (req: NextRequest, { params, session }) => {
       pages: Math.ceil(total / limit),
     },
   });
-});
+}, { requiredPermission: "deals:read_own" });
 
 export const POST = apiHandler(async (req: NextRequest, { params, session }) => {
   const dealId = params?.id;
   const body = await req.json();
   const { activityType, content, metadata } = body;
 
-  // Verificar se o deal pertence ao usuário
+  // Build filter with organizationId and role-based access
+  const baseFilter = getDealsFilter(session);
+
+  // Verificar se o deal pertence à organização do usuário
   const deal = await db.deal.findFirst({
-    where: { id: dealId, userId: session!.user.id },
+    where: { id: dealId, ...baseFilter },
   });
 
   if (!deal) {
@@ -73,6 +79,7 @@ export const POST = apiHandler(async (req: NextRequest, { params, session }) => 
 
   const activity = await db.dealActivity.create({
     data: {
+      organizationId: session!.user.organizationId!,
       dealId: dealId!,
       userId: session!.user.id,
       activityType,
@@ -93,4 +100,4 @@ export const POST = apiHandler(async (req: NextRequest, { params, session }) => 
   });
 
   return NextResponse.json({ activity });
-});
+}, { requiredPermission: "deals:update" });

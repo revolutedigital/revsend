@@ -1,6 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useState } from 'react'
+import { useSession } from 'next-auth/react'
 
 export interface OnboardingStep {
   id: string
@@ -11,7 +12,8 @@ export interface OnboardingStep {
   isCompleted?: boolean
 }
 
-export const ONBOARDING_STEPS: OnboardingStep[] = [
+// Full onboarding steps for Gerente (admins who set up the org)
+export const GERENTE_ONBOARDING_STEPS: OnboardingStep[] = [
   {
     id: 'welcome',
     title: 'Bem-vindo ao RevSend!',
@@ -43,6 +45,54 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
   },
 ]
 
+// Simplified onboarding for Vendedor (salespeople invited to the org)
+export const VENDEDOR_ONBOARDING_STEPS: OnboardingStep[] = [
+  {
+    id: 'welcome-vendedor',
+    title: 'Bem-vindo à equipe!',
+    description: 'Seu gerente já configurou o RevSend. Vamos fazer um tour rápido pelas suas ferramentas.',
+  },
+  {
+    id: 'view-deals',
+    title: 'Seus Deals',
+    description: 'Aqui você vê os leads atribuídos a você. Acompanhe o progresso e gerencie suas negociações.',
+    target: '[data-onboarding="deals"]',
+  },
+  {
+    id: 'view-pipeline',
+    title: 'Pipeline de Vendas',
+    description: 'Arraste seus deals entre as etapas conforme avança nas negociações.',
+    target: '[data-onboarding="pipeline"]',
+  },
+  {
+    id: 'view-campaigns',
+    title: 'Campanhas Ativas',
+    description: 'Veja as campanhas em andamento e as respostas dos seus leads.',
+    target: '[data-onboarding="campaigns"]',
+  },
+]
+
+// Master-specific onboarding (global admin)
+export const MASTER_ONBOARDING_STEPS: OnboardingStep[] = [
+  {
+    id: 'welcome-master',
+    title: 'Bem-vindo, Master!',
+    description: 'Você tem acesso total ao sistema. Vamos conhecer as ferramentas de administração.',
+  },
+  {
+    id: 'admin-panel',
+    title: 'Painel Admin',
+    description: 'Gerencie todas as organizações e usuários do sistema.',
+    target: '[data-onboarding="admin"]',
+  },
+  {
+    id: 'org-management',
+    title: 'Organizações',
+    description: 'Crie e gerencie organizações, adicione membros e configure planos.',
+    target: '[data-onboarding="organizations"]',
+  },
+]
+
 interface OnboardingState {
   currentStep: number
   completedSteps: string[]
@@ -53,6 +103,7 @@ interface OnboardingState {
 const STORAGE_KEY = 'revsend_onboarding'
 
 export function useOnboarding() {
+  const { data: session } = useSession()
   const [state, setState] = useState<OnboardingState>({
     currentStep: 0,
     completedSteps: [],
@@ -62,9 +113,44 @@ export function useOnboarding() {
   const [isLoading, setIsLoading] = useState(true)
   const [showWelcome, setShowWelcome] = useState(false)
 
+  // Get role from session
+  const role = session?.user?.role || 'vendedor'
+  const isMaster = session?.user?.isMaster || false
+  // Note: organizationName could be fetched separately if needed
+  const organizationName = ''
+
+  // Get steps based on role
+  const getStepsForRole = useCallback(() => {
+    if (isMaster && !session?.user?.currentOrgId) {
+      return MASTER_ONBOARDING_STEPS
+    }
+    if (role === 'gerente') {
+      return GERENTE_ONBOARDING_STEPS
+    }
+    return VENDEDOR_ONBOARDING_STEPS
+  }, [role, isMaster, session?.user?.currentOrgId])
+
+  const ONBOARDING_STEPS = getStepsForRole()
+
+  // Generate storage key based on role to have separate onboarding tracks
+  const getStorageKey = useCallback(() => {
+    if (isMaster && !session?.user?.currentOrgId) {
+      return `${STORAGE_KEY}_master`
+    }
+    return `${STORAGE_KEY}_${role}`
+  }, [role, isMaster, session?.user?.currentOrgId])
+
   // Load state from localStorage on mount
   useEffect(() => {
-    const saved = localStorage.getItem(STORAGE_KEY)
+    const storageKey = getStorageKey()
+    const hidden = localStorage.getItem('revsend_onboarding_hidden')
+    if (hidden === 'true') {
+      setShowWelcome(false)
+      setIsLoading(false)
+      return
+    }
+
+    const saved = localStorage.getItem(storageKey)
     if (saved) {
       try {
         const parsed = JSON.parse(saved)
@@ -79,23 +165,24 @@ export function useOnboarding() {
       setShowWelcome(true)
     }
     setIsLoading(false)
-  }, [])
+  }, [getStorageKey])
 
   // Save state to localStorage
   const saveState = useCallback((newState: OnboardingState) => {
     setState(newState)
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(newState))
-  }, [])
+    localStorage.setItem(getStorageKey(), JSON.stringify(newState))
+  }, [getStorageKey])
 
   // Mark current step as complete and advance
   const completeStep = useCallback((stepId: string) => {
     setState((prev) => {
+      const steps = getStepsForRole()
       const newCompletedSteps = prev.completedSteps.includes(stepId)
         ? prev.completedSteps
         : [...prev.completedSteps, stepId]
 
-      const nextStep = Math.min(prev.currentStep + 1, ONBOARDING_STEPS.length - 1)
-      const isCompleted = newCompletedSteps.length >= ONBOARDING_STEPS.length
+      const nextStep = Math.min(prev.currentStep + 1, steps.length - 1)
+      const isCompleted = newCompletedSteps.length >= steps.length
 
       const newState = {
         ...prev,
@@ -104,22 +191,23 @@ export function useOnboarding() {
         isCompleted,
       }
 
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(newState))
+      localStorage.setItem(getStorageKey(), JSON.stringify(newState))
       return newState
     })
-  }, [])
+  }, [getStepsForRole, getStorageKey])
 
   // Go to specific step
   const goToStep = useCallback((stepIndex: number) => {
     setState((prev) => {
+      const steps = getStepsForRole()
       const newState = {
         ...prev,
-        currentStep: Math.max(0, Math.min(stepIndex, ONBOARDING_STEPS.length - 1)),
+        currentStep: Math.max(0, Math.min(stepIndex, steps.length - 1)),
       }
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(newState))
+      localStorage.setItem(getStorageKey(), JSON.stringify(newState))
       return newState
     })
-  }, [])
+  }, [getStepsForRole, getStorageKey])
 
   // Skip onboarding
   const skipOnboarding = useCallback(() => {
@@ -172,6 +260,11 @@ export function useOnboarding() {
     showWelcome,
     progress,
     steps: ONBOARDING_STEPS,
+
+    // Role info
+    role,
+    isMaster,
+    organizationName,
 
     // Actions
     completeStep,

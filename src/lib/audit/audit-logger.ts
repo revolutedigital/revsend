@@ -142,6 +142,79 @@ export async function getUserAuditLogs(
 }
 
 /**
+ * Get audit logs for an organization
+ */
+export async function getOrganizationAuditLogs(
+  organizationId: string,
+  options?: {
+    limit?: number
+    offset?: number
+    action?: string
+  }
+) {
+  const { limit = 50, offset = 0, action } = options || {}
+
+  return await prisma.auditLog.findMany({
+    where: {
+      organizationId,
+      ...(action && { action }),
+    },
+    orderBy: {
+      createdAt: 'desc',
+    },
+    take: limit,
+    skip: offset,
+    include: {
+      user: {
+        select: {
+          id: true,
+          name: true,
+          email: true,
+        },
+      },
+    },
+  })
+}
+
+/**
+ * Get audit log statistics for an organization
+ */
+export async function getOrganizationAuditLogStats(organizationId: string) {
+  const where = { organizationId }
+
+  const [total, last24h, lastWeek] = await Promise.all([
+    // Total logs
+    prisma.auditLog.count({ where }),
+
+    // Last 24 hours
+    prisma.auditLog.count({
+      where: {
+        ...where,
+        createdAt: {
+          gte: new Date(Date.now() - 24 * 60 * 60 * 1000),
+        },
+      },
+    }),
+
+    // Last week
+    prisma.auditLog.count({
+      where: {
+        ...where,
+        createdAt: {
+          gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
+        },
+      },
+    }),
+  ])
+
+  return {
+    total,
+    last24h,
+    lastWeek,
+  }
+}
+
+/**
  * Get all audit logs (admin only in future)
  */
 export async function getAllAuditLogs(options?: {

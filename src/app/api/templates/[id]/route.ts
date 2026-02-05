@@ -7,7 +7,7 @@ export const GET = apiHandler(async (_req: NextRequest, { params, session }) => 
   const template = await db.messageTemplate.findFirst({
     where: {
       id: params?.id,
-      userId: session!.user.id,
+      organizationId: session!.user.organizationId!,
     },
   });
 
@@ -19,15 +19,15 @@ export const GET = apiHandler(async (_req: NextRequest, { params, session }) => 
   }
 
   return NextResponse.json({ template });
-});
+}, { requiredPermission: 'templates:read' });
 
 // PUT - Atualizar template
 export const PUT = apiHandler(async (req: NextRequest, { params, session }) => {
-  // Verificar se o template pertence ao usuário
+  // Verificar se o template pertence à organização
   const existing = await db.messageTemplate.findFirst({
     where: {
       id: params?.id,
-      userId: session!.user.id,
+      organizationId: session!.user.organizationId!,
     },
   });
 
@@ -54,15 +54,15 @@ export const PUT = apiHandler(async (req: NextRequest, { params, session }) => {
   });
 
   return NextResponse.json({ template });
-});
+}, { requiredPermission: 'templates:update' });
 
 // DELETE - Excluir template
 export const DELETE = apiHandler(async (_req: NextRequest, { params, session }) => {
-  // Verificar se o template pertence ao usuário
+  // Verificar se o template pertence à organização
   const existing = await db.messageTemplate.findFirst({
     where: {
       id: params?.id,
-      userId: session!.user.id,
+      organizationId: session!.user.organizationId!,
     },
   });
 
@@ -78,4 +78,4 @@ export const DELETE = apiHandler(async (_req: NextRequest, { params, session }) 
   });
 
   return NextResponse.json({ success: true });
-});
+}, { requiredPermission: 'templates:delete' });

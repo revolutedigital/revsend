@@ -2,6 +2,8 @@ import { Queue, Worker, Job } from "bullmq";
 import { redis } from "@/lib/redis";
 import { db } from "@/lib/db";
 import { sendMessage, MediaOptions } from "@/lib/whatsapp/client";
+import { resolveTemplateVariables } from "@/lib/template-variables";
+import { isBlacklisted } from "@/lib/lgpd";
 
 interface DispatchJob {
   campaignId: string;
@@ -57,6 +59,8 @@ export async function startCampaignDispatch(campaignId: string): Promise<void> {
           whatsappNumber: true,
         },
       },
+      organization: true,
+      user: true,
     },
   });
 
@@ -90,9 +94,16 @@ export async function startCampaignDispatch(campaignId: string): Promise<void> {
   let currentDelay = 0;
   let messageIndex = 0;
   let numberIndex = 0;
+  let skippedCount = 0;
 
   // Criar jobs para cada contato
   for (const contact of contacts) {
+    // Check if contact is blacklisted (LGPD compliance)
+    if (await isBlacklisted(campaign.organizationId, contact.phoneNumber)) {
+      skippedCount++;
+      continue;
+    }
+
     // Rotação de mensagens
     const message = messages[messageIndex % messages.length];
     messageIndex++;
@@ -101,23 +112,25 @@ export async function startCampaignDispatch(campaignId: string): Promise<void> {
     const campaignNumber = numbers[numberIndex % numbers.length];
     numberIndex++;
 
-    // Substituir variáveis na mensagem
-    let finalMessage = message.content;
-    if (contact.name) {
-      finalMessage = finalMessage.replace(/{nome}/gi, contact.name);
-    }
-    if (contact.extraFields) {
-      const extras = contact.extraFields as Record<string, string>;
-      for (const [key, value] of Object.entries(extras)) {
-        finalMessage = finalMessage.replace(
-          new RegExp(`{${key}}`, "gi"),
-          value
-        );
-      }
-    }
+    // Resolve template variables using enhanced system
+    // Extract email from extraFields if present
+    const extraFields = contact.extraFields as Record<string, unknown> | null;
+    const finalMessage = resolveTemplateVariables(message.content, {
+      contact: {
+        name: contact.name,
+        phoneNumber: contact.phoneNumber,
+        email: extraFields?.email as string | undefined,
+        customFields: extraFields,
+      },
+      organization: campaign.organization
+        ? { name: campaign.organization.name }
+        : undefined,
+      campaign: { name: campaign.name },
+      user: campaign.user ? { name: campaign.user.name } : undefined,
+    });
 
     // Criar registro de mensagem enviada
-    const sentMessage = await db.sentMessage.create({
+    await db.sentMessage.create({
       data: {
         campaignId,
         contactId: contact.id,
@@ -153,6 +166,11 @@ export async function startCampaignDispatch(campaignId: string): Promise<void> {
     const minDelay = campaign.minIntervalSeconds * 1000;
     const maxDelay = campaign.maxIntervalSeconds * 1000;
     currentDelay += Math.floor(Math.random() * (maxDelay - minDelay) + minDelay);
+  }
+
+  // Log skipped contacts due to blacklist
+  if (skippedCount > 0) {
+    console.log(`Campaign ${campaignId}: Skipped ${skippedCount} blacklisted contacts`);
   }
 }
 

@@ -1,121 +1,83 @@
-import { NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
+import { NextRequest, NextResponse } from "next/server";
+import { apiHandler } from "@/lib/api-handler";
 import { db } from "@/lib/db";
 
-// GET - Listar números do usuário
-export async function GET() {
-  try {
-    const session = await auth();
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
-    }
+// GET - Listar números da organização
+export const GET = apiHandler(async (_req: NextRequest, { session }) => {
+  const numbers = await db.whatsappNumber.findMany({
+    where: { organizationId: session!.user.organizationId! },
+    orderBy: { createdAt: "desc" },
+    select: {
+      id: true,
+      name: true,
+      phoneNumber: true,
+      status: true,
+      createdAt: true,
+    },
+  });
 
-    const numbers = await db.whatsappNumber.findMany({
-      where: { userId: session.user.id },
-      orderBy: { createdAt: "desc" },
-      select: {
-        id: true,
-        name: true,
-        phoneNumber: true,
-        status: true,
-        createdAt: true,
-      },
-    });
-
-    return NextResponse.json({ numbers });
-  } catch (error) {
-    console.error("Erro ao buscar números:", error);
-    return NextResponse.json(
-      { error: "Erro ao buscar números" },
-      { status: 500 }
-    );
-  }
-}
+  return NextResponse.json({ numbers });
+}, { requiredPermission: "whatsapp:read" });
 
 // POST - Adicionar novo número
-export async function POST(request: Request) {
-  try {
-    const session = await auth();
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
-    }
+export const POST = apiHandler(async (req: NextRequest, { session }) => {
+  const { name } = await req.json();
 
-    const { name } = await request.json();
+  // Verificar limite de 4 números por organização
+  const count = await db.whatsappNumber.count({
+    where: { organizationId: session!.user.organizationId! },
+  });
 
-    // Verificar limite de 4 números
-    const count = await db.whatsappNumber.count({
-      where: { userId: session.user.id },
-    });
-
-    if (count >= 4) {
-      return NextResponse.json(
-        { error: "Limite de 4 números atingido" },
-        { status: 400 }
-      );
-    }
-
-    const number = await db.whatsappNumber.create({
-      data: {
-        userId: session.user.id,
-        name: name || `WhatsApp ${count + 1}`,
-        phoneNumber: "",
-        status: "disconnected",
-      },
-    });
-
-    return NextResponse.json({ number }, { status: 201 });
-  } catch (error) {
-    console.error("Erro ao criar número:", error);
+  if (count >= 4) {
     return NextResponse.json(
-      { error: "Erro ao criar número" },
-      { status: 500 }
+      { error: "Limite de 4 números atingido" },
+      { status: 400 }
     );
   }
-}
+
+  const number = await db.whatsappNumber.create({
+    data: {
+      userId: session!.user.id,
+      organizationId: session!.user.organizationId!,
+      name: name || `WhatsApp ${count + 1}`,
+      phoneNumber: "",
+      status: "disconnected",
+    },
+  });
+
+  return NextResponse.json({ number }, { status: 201 });
+}, { requiredPermission: "whatsapp:connect" });
 
 // DELETE - Remover número
-export async function DELETE(request: Request) {
-  try {
-    const session = await auth();
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
-    }
+export const DELETE = apiHandler(async (req: NextRequest, { session }) => {
+  const { searchParams } = new URL(req.url);
+  const numberId = searchParams.get("id");
 
-    const { searchParams } = new URL(request.url);
-    const numberId = searchParams.get("id");
-
-    if (!numberId) {
-      return NextResponse.json(
-        { error: "ID do número não fornecido" },
-        { status: 400 }
-      );
-    }
-
-    // Verificar se pertence ao usuário
-    const number = await db.whatsappNumber.findFirst({
-      where: {
-        id: numberId,
-        userId: session.user.id,
-      },
-    });
-
-    if (!number) {
-      return NextResponse.json(
-        { error: "Número não encontrado" },
-        { status: 404 }
-      );
-    }
-
-    await db.whatsappNumber.delete({
-      where: { id: numberId },
-    });
-
-    return NextResponse.json({ success: true });
-  } catch (error) {
-    console.error("Erro ao deletar número:", error);
+  if (!numberId) {
     return NextResponse.json(
-      { error: "Erro ao deletar número" },
-      { status: 500 }
+      { error: "ID do número não fornecido" },
+      { status: 400 }
     );
   }
-}
+
+  // Verificar se pertence à organização
+  const number = await db.whatsappNumber.findFirst({
+    where: {
+      id: numberId,
+      organizationId: session!.user.organizationId!,
+    },
+  });
+
+  if (!number) {
+    return NextResponse.json(
+      { error: "Número não encontrado" },
+      { status: 404 }
+    );
+  }
+
+  await db.whatsappNumber.delete({
+    where: { id: numberId },
+  });
+
+  return NextResponse.json({ success: true });
+}, { requiredPermission: "whatsapp:connect" });

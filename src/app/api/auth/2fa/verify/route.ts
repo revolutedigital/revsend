@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
-import { verifyTwoFactorToken } from '@/lib/auth/2fa'
+import { verifyTwoFactorToken, encryptTwoFactorSecret } from '@/lib/auth/2fa'
 import { db as prisma } from '@/lib/db'
 import { createAuditLogFromRequest } from '@/lib/audit/audit-logger'
 
@@ -44,7 +44,7 @@ export async function POST(request: NextRequest) {
       where: { id: user.id },
       data: {
         twoFactorEnabled: true,
-        twoFactorSecret: secret,
+        twoFactorSecret: encryptTwoFactorSecret(secret),
       },
     })
 

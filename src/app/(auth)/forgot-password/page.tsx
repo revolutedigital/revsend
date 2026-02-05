@@ -8,6 +8,7 @@ import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { toast } from 'sonner'
 import { Loader2, ArrowLeft, Mail, CheckCircle2 } from 'lucide-react'
+import { RevSendMascot } from '@/components/logo/RevSendMascot'
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState('')
@@ -120,7 +121,10 @@ export default function ForgotPasswordPage() {
   return (
     <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-navy via-navy to-orange/10">
       <Card className="w-full max-w-md">
-        <CardHeader>
+        <CardHeader className="text-center">
+          <div className="flex justify-center mb-4">
+            <RevSendMascot className="w-20 h-24" variant="static" mood="thinking" />
+          </div>
           <CardTitle>Esqueceu sua senha?</CardTitle>
           <CardDescription>
             Digite seu email e enviaremos um link para redefinir sua senha

@@ -13,6 +13,7 @@ model User {
   email                  String    @unique
   passwordHash           String    @map("password_hash")
   name                   String?
+  isMaster               Boolean   @default(false) @map("is_master")
   twoFactorEnabled       Boolean   @default(false) @map("two_factor_enabled")
   twoFactorSecret        String?   @map("two_factor_secret")
   twoFactorBackupCodes   String[]  @default([]) @map("two_factor_backup_codes")
@@ -25,19 +26,38 @@ model User {
   createdAt              DateTime  @default(now()) @map("created_at")
   updatedAt              DateTime  @updatedAt @map("updated_at")
 
-  whatsappNumbers     WhatsappNumber[]
-  contactLists        ContactList[]
-  campaigns           Campaign[]
-  mediaFiles          MediaFile[]
-  templates           MessageTemplate[]
-  webhooks            Webhook[]
-  pipelineStages      PipelineStage[]
-  deals               Deal[]
-  dealActivities      DealActivity[]
-  dealTasks           DealTask[]
-  settings            UserSettings?
-  onboardingProgress  OnboardingProgress?
-  favorites           UserFavorite[]
+  // Personal resources (not org-scoped)
+  settings           UserSettings?
+  onboardingProgress OnboardingProgress?
+  favorites          UserFavorite[]
+
+  // Organization memberships
+  organizations OrganizationMember[]
+
+  // Assigned resources (via organization)
+  assignedDeals Deal[]     @relation("assignedDeals")
+  assignedTasks DealTask[] @relation("assignedTasks")
+
+  // Activity tracking
+  whatsappNumbers WhatsappNumber[]
+  contactLists    ContactList[]
+  campaigns       Campaign[]
+  mediaFiles      MediaFile[]
+  templates       MessageTemplate[]
+  webhooks        Webhook[]
+  pipelineStages  PipelineStage[]
+  deals           Deal[]           @relation("createdDeals")
+  dealActivities  DealActivity[]
+  dealTasks       DealTask[]       @relation("createdTasks")
+  auditLogs       AuditLog[]
+
+  // Notifications and invites
+  notifications   Notification[]
+  sentInvites     OrganizationInvite[] @relation("InvitedBy")
+  acceptedInvites OrganizationInvite[] @relation("AcceptedBy")
+
+  // Lead roulette
+  rouletteWeights LeadRouletteWeight[]
 
   @@map("users")
 }
@@ -79,7 +99,7 @@ model OnboardingProgress {
 model UserFavorite {
   id        String   @id @default(cuid())
   userId    String   @map("user_id")
-  type      String   // 'campaign', 'list', 'contact', 'deal'
+  type      String // 'campaign', 'list', 'contact', 'deal'
   entityId  String   @map("entity_id")
   createdAt DateTime @default(now()) @map("created_at")
 
@@ -90,36 +110,144 @@ model UserFavorite {
   @@map("user_favorites")
 }
 
-model WhatsappNumber {
-  id          String   @id @default(cuid())
-  userId      String   @map("user_id")
-  phoneNumber String   @map("phone_number")
-  name        String?
-  sessionData Json?    @map("session_data")
-  status      String   @default("disconnected") // connected, disconnected, banned
-  createdAt   DateTime @default(now()) @map("created_at")
-  updatedAt   DateTime @updatedAt @map("updated_at")
+// ==================== MULTI-TENANCY ====================
 
+model Organization {
+  id        String   @id @default(cuid())
+  name      String
+  slug      String   @unique
+  plan      String   @default("free") // free, starter, pro, enterprise
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // Members
+  members OrganizationMember[]
+  invites OrganizationInvite[]
+
+  // Resources
+  whatsappNumbers  WhatsappNumber[]
+  contactLists     ContactList[]
+  campaigns        Campaign[]
+  mediaFiles       MediaFile[]
+  templates        MessageTemplate[]
+  webhooks         Webhook[]
+  pipelineStages   PipelineStage[]
+  deals            Deal[]
+  dealActivities   DealActivity[]
+  dealTasks        DealTask[]
+  auditLogs        AuditLog[]
+  notifications    Notification[]
+  tags             Tag[]
+  blacklist        Blacklist[]
+  blacklistKeywords BlacklistKeyword[]
+  consents         ContactConsent[]
+  rouletteConfig   LeadRouletteConfig?
+
+  @@map("organizations")
+}
+
+model OrganizationMember {
+  id             String   @id @default(cuid())
+  organizationId String   @map("organization_id")
+  userId         String   @map("user_id")
+  role           String   @default("vendedor") // "gerente" | "vendedor"
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([organizationId, userId])
+  @@index([userId])
+  @@map("organization_members")
+}
+
+// ==================== INVITES ====================
+
+model OrganizationInvite {
+  id             String    @id @default(cuid())
+  organizationId String    @map("organization_id")
+  email          String? // convite por email
+  token          String    @unique // token único para link
+  role           String    @default("vendedor") // role ao aceitar
+  status         String    @default("pending") // pending, accepted, cancelled
+  invitedById    String    @map("invited_by_id")
+  acceptedById   String?   @map("accepted_by_id")
+  acceptedAt     DateTime? @map("accepted_at")
+  expiresAt      DateTime  @map("expires_at")
+  createdAt      DateTime  @default(now()) @map("created_at")
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  invitedBy    User         @relation("InvitedBy", fields: [invitedById], references: [id])
+  acceptedBy   User?        @relation("AcceptedBy", fields: [acceptedById], references: [id])
+
+  @@index([token])
+  @@index([organizationId])
+  @@index([status])
+  @@map("organization_invites")
+}
+
+// ==================== NOTIFICATIONS ====================
+
+model Notification {
+  id             String    @id @default(cuid())
+  organizationId String    @map("organization_id")
+  userId         String    @map("user_id") // destinatário
+  type           String // deal_assigned, campaign_completed, member_joined, task_due, lead_hot, opt_out
+  title          String
+  message        String
+  metadata       Json?
+  read           Boolean   @default(false)
+  readAt         DateTime? @map("read_at")
+  createdAt      DateTime  @default(now()) @map("created_at")
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, read])
+  @@index([organizationId])
+  @@map("notifications")
+}
+
+// ==================== WHATSAPP ====================
+
+model WhatsappNumber {
+  id             String   @id @default(cuid())
+  organizationId String   @map("organization_id")
+  userId         String   @map("user_id") // who connected it
+  phoneNumber    String   @map("phone_number")
+  name           String?
+  sessionData    Json?    @map("session_data")
+  status         String   @default("disconnected") // connected, disconnected, banned
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  organization    Organization     @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   user            User             @relation(fields: [userId], references: [id], onDelete: Cascade)
   campaignNumbers CampaignNumber[]
   sentMessages    SentMessage[]
   replies         Reply[]
 
+  @@index([organizationId])
   @@map("whatsapp_numbers")
 }
 
+// ==================== CONTACTS ====================
+
 model ContactList {
   id               String   @id @default(cuid())
-  userId           String   @map("user_id")
+  organizationId   String   @map("organization_id")
+  userId           String   @map("user_id") // who created it
   name             String
   originalFilename String?  @map("original_filename")
   totalContacts    Int      @default(0) @map("total_contacts")
   createdAt        DateTime @default(now()) @map("created_at")
 
-  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
-  contacts  Contact[]
-  campaigns Campaign[]
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  contacts     Contact[]
+  campaigns    Campaign[]
 
+  @@index([organizationId])
   @@map("contact_lists")
 }
 
@@ -129,21 +257,63 @@ model Contact {
   phoneNumber String   @map("phone_number")
   name        String?
   extraFields Json?    @map("extra_fields")
-  createdAt   DateTime @default(now()) @map("created_at")
+
+  // Lead scoring
+  leadScore     Int?      @default(0) @map("lead_score") // 0-100
+  leadStatus    String?   @default("novo") @map("lead_status") // novo, quente, morno, frio, convertido, perdido
+  scoredAt      DateTime? @map("scored_at")
+  scoreMetadata Json?     @map("score_metadata") // detalhes da classificação
+
+  createdAt DateTime @default(now()) @map("created_at")
 
   list         ContactList   @relation(fields: [listId], references: [id], onDelete: Cascade)
   sentMessages SentMessage[]
   replies      Reply[]
   deals        Deal[]
+  tags         ContactTag[]
 
   @@index([listId])
   @@index([phoneNumber])
+  @@index([leadStatus])
   @@map("contacts")
 }
 
+// ==================== TAGS ====================
+
+model Tag {
+  id             String   @id @default(cuid())
+  organizationId String   @map("organization_id")
+  name           String
+  color          String   @default("#6B7280") // hex color
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  contacts     ContactTag[]
+
+  @@unique([organizationId, name])
+  @@index([organizationId])
+  @@map("tags")
+}
+
+model ContactTag {
+  id        String   @id @default(cuid())
+  contactId String   @map("contact_id")
+  tagId     String   @map("tag_id")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  contact Contact @relation(fields: [contactId], references: [id], onDelete: Cascade)
+  tag     Tag     @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@unique([contactId, tagId])
+  @@map("contact_tags")
+}
+
+// ==================== CAMPAIGNS ====================
+
 model Campaign {
   id                 String    @id @default(cuid())
-  userId             String    @map("user_id")
+  organizationId     String    @map("organization_id")
+  userId             String    @map("user_id") // who created it
   listId             String?   @map("list_id")
   name               String
   status             String    @default("draft") // draft, scheduled, running, paused, completed, cancelled
@@ -158,6 +328,7 @@ model Campaign {
   completedAt        DateTime? @map("completed_at")
   createdAt          DateTime  @default(now()) @map("created_at")
 
+  organization    Organization      @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   user            User              @relation(fields: [userId], references: [id], onDelete: Cascade)
   list            ContactList?      @relation(fields: [listId], references: [id])
   messages        CampaignMessage[]
@@ -165,6 +336,7 @@ model Campaign {
   sentMessages    SentMessage[]
   replies         Reply[]
 
+  @@index([organizationId])
   @@map("campaigns")
 }
 
@@ -186,57 +358,68 @@ model CampaignMessage {
 }
 
 model MediaFile {
-  id           String   @id @default(cuid())
-  userId       String   @map("user_id")
-  filename     String
-  originalName String   @map("original_name")
-  mimeType     String   @map("mime_type")
-  size         Int
-  url          String
-  createdAt    DateTime @default(now()) @map("created_at")
+  id             String   @id @default(cuid())
+  organizationId String   @map("organization_id")
+  userId         String   @map("user_id") // who uploaded it
+  filename       String
+  originalName   String   @map("original_name")
+  mimeType       String   @map("mime_type")
+  size           Int
+  url            String
+  createdAt      DateTime @default(now()) @map("created_at")
 
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
 
+  @@index([organizationId])
   @@map("media_files")
 }
 
 model MessageTemplate {
-  id        String   @id @default(cuid())
-  userId    String   @map("user_id")
-  name      String
-  category  String? // prospecção, follow-up, lembrete, etc
-  content   String
-  mediaType String?  @map("media_type")
-  mediaUrl  String?  @map("media_url")
-  mediaName String?  @map("media_name")
-  timesUsed Int      @default(0) @map("times_used")
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
+  id             String   @id @default(cuid())
+  organizationId String   @map("organization_id")
+  userId         String   @map("user_id") // who created it
+  name           String
+  category       String? // prospecção, follow-up, lembrete, etc
+  content        String
+  mediaType      String?  @map("media_type")
+  mediaUrl       String?  @map("media_url")
+  mediaName      String?  @map("media_name")
+  timesUsed      Int      @default(0) @map("times_used")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
 
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@index([userId])
+  @@index([organizationId])
   @@map("message_templates")
 }
 
+// ==================== WEBHOOKS ====================
+
 model Webhook {
-  id           String    @id @default(cuid())
-  userId       String    @map("user_id")
-  name         String
-  url          String
-  secret       String? // Para validação HMAC
-  events       String[] // campaign.started, campaign.completed, message.sent, message.failed, reply.received
-  isActive     Boolean   @default(true) @map("is_active")
-  lastError    String?   @map("last_error")
-  lastCalledAt DateTime? @map("last_called_at")
-  createdAt    DateTime  @default(now()) @map("created_at")
-  updatedAt    DateTime  @updatedAt @map("updated_at")
+  id             String    @id @default(cuid())
+  organizationId String    @map("organization_id")
+  userId         String    @map("user_id") // who created it
+  name           String
+  url            String
+  secret         String? // Para validação HMAC
+  events         String[] // campaign.started, campaign.completed, message.sent, message.failed, reply.received
+  isActive       Boolean   @default(true) @map("is_active")
+  lastError      String?   @map("last_error")
+  lastCalledAt   DateTime? @map("last_called_at")
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @updatedAt @map("updated_at")
 
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@index([userId])
+  @@index([organizationId])
   @@map("webhooks")
 }
+
+// ==================== CAMPAIGN EXECUTION ====================
 
 model CampaignNumber {
   id               String @id @default(cuid())
@@ -295,27 +478,31 @@ model Reply {
 // ==================== CRM MODELS ====================
 
 model PipelineStage {
-  id         String   @id @default(cuid())
-  userId     String   @map("user_id")
-  name       String
-  color      String   @default("#6B7280") // Cor do estágio (hex)
-  orderIndex Int      @default(0) @map("order_index")
-  isFinal    Boolean  @default(false) @map("is_final") // true para "Ganho" ou "Perdido"
-  isWon      Boolean  @default(false) @map("is_won") // true apenas para "Ganho"
-  createdAt  DateTime @default(now()) @map("created_at")
+  id             String   @id @default(cuid())
+  organizationId String   @map("organization_id")
+  userId         String   @map("user_id") // who created it
+  name           String
+  color          String   @default("#6B7280") // Cor do estágio (hex)
+  orderIndex     Int      @default(0) @map("order_index")
+  isFinal        Boolean  @default(false) @map("is_final") // true para "Ganho" ou "Perdido"
+  isWon          Boolean  @default(false) @map("is_won") // true apenas para "Ganho"
+  createdAt      DateTime @default(now()) @map("created_at")
 
-  user  User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-  deals Deal[]
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  deals        Deal[]
 
-  @@index([userId])
+  @@index([organizationId])
   @@map("pipeline_stages")
 }
 
 model Deal {
-  id        String  @id @default(cuid())
-  userId    String  @map("user_id")
-  contactId String? @map("contact_id")
-  stageId   String  @map("stage_id")
+  id             String  @id @default(cuid())
+  organizationId String  @map("organization_id")
+  userId         String  @map("user_id") // who created it
+  assignedToId   String? @map("assigned_to_id") // vendedor responsável
+  contactId      String? @map("contact_id")
+  stageId        String  @map("stage_id")
 
   // Informações do Deal
   title       String
@@ -338,22 +525,26 @@ model Deal {
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
-  user       User           @relation(fields: [userId], references: [id], onDelete: Cascade)
-  contact    Contact?       @relation(fields: [contactId], references: [id])
-  stage      PipelineStage  @relation(fields: [stageId], references: [id])
-  activities DealActivity[]
-  tasks      DealTask[]
+  organization Organization   @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  user         User           @relation("createdDeals", fields: [userId], references: [id], onDelete: Cascade)
+  assignedTo   User?          @relation("assignedDeals", fields: [assignedToId], references: [id])
+  contact      Contact?       @relation(fields: [contactId], references: [id])
+  stage        PipelineStage  @relation(fields: [stageId], references: [id])
+  activities   DealActivity[]
+  tasks        DealTask[]
 
-  @@index([userId])
+  @@index([organizationId])
+  @@index([assignedToId])
   @@index([stageId])
   @@index([contactId])
   @@map("deals")
 }
 
 model DealActivity {
-  id     String @id @default(cuid())
-  dealId String @map("deal_id")
-  userId String @map("user_id")
+  id             String @id @default(cuid())
+  organizationId String @map("organization_id")
+  dealId         String @map("deal_id")
+  userId         String @map("user_id")
 
   activityType String  @map("activity_type") // 'note', 'call', 'whatsapp', 'email', 'stage_change', 'task_completed'
   content      String?
@@ -361,17 +552,21 @@ model DealActivity {
 
   createdAt DateTime @default(now()) @map("created_at")
 
-  deal Deal @relation(fields: [dealId], references: [id], onDelete: Cascade)
-  user User @relation(fields: [userId], references: [id])
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  deal         Deal         @relation(fields: [dealId], references: [id], onDelete: Cascade)
+  user         User         @relation(fields: [userId], references: [id])
 
+  @@index([organizationId])
   @@index([dealId])
   @@map("deal_activities")
 }
 
 model DealTask {
-  id     String @id @default(cuid())
-  dealId String @map("deal_id")
-  userId String @map("user_id")
+  id             String @id @default(cuid())
+  organizationId String @map("organization_id")
+  dealId         String @map("deal_id")
+  userId         String @map("user_id") // who created it
+  assignedToId   String? @map("assigned_to_id") // who should do it
 
   title       String
   description String?
@@ -381,27 +576,67 @@ model DealTask {
 
   createdAt DateTime @default(now()) @map("created_at")
 
-  deal Deal @relation(fields: [dealId], references: [id], onDelete: Cascade)
-  user User @relation(fields: [userId], references: [id])
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  deal         Deal         @relation(fields: [dealId], references: [id], onDelete: Cascade)
+  user         User         @relation("createdTasks", fields: [userId], references: [id])
+  assignedTo   User?        @relation("assignedTasks", fields: [assignedToId], references: [id])
 
+  @@index([organizationId])
   @@index([dealId])
-  @@index([userId])
+  @@index([assignedToId])
   @@map("deal_tasks")
+}
+
+// ==================== LEAD ROULETTE ====================
+
+model LeadRouletteConfig {
+  id             String   @id @default(cuid())
+  organizationId String   @unique @map("organization_id")
+  enabled        Boolean  @default(true)
+  strategy       String   @default("weighted_round_robin") // weighted_round_robin
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  organization Organization         @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  members      LeadRouletteWeight[]
+
+  @@map("lead_roulette_configs")
+}
+
+model LeadRouletteWeight {
+  id             String    @id @default(cuid())
+  rouletteId     String    @map("roulette_id")
+  userId         String    @map("user_id")
+  weight         Int       @default(1) // peso: 1 = normal, 2 = recebe 2x, etc.
+  active         Boolean   @default(true)
+  lastAssignedAt DateTime? @map("last_assigned_at")
+  assignCount    Int       @default(0) @map("assign_count")
+
+  roulette LeadRouletteConfig @relation(fields: [rouletteId], references: [id], onDelete: Cascade)
+  user     User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([rouletteId, userId])
+  @@map("lead_roulette_weights")
 }
 
 // ==================== AUDIT LOGS ====================
 
 model AuditLog {
-  id        String   @id @default(cuid())
-  userId    String?  @map("user_id") // Null for system actions
-  action    String // login, logout, password_change, 2fa_enable, 2fa_disable, campaign_start, etc
-  resource  String? // Type of resource (campaign, list, contact, etc)
-  resourceId String? @map("resource_id") // ID of the affected resource
-  details   Json? // Additional details about the action
-  ipAddress String?  @map("ip_address")
-  userAgent String?  @map("user_agent")
-  createdAt DateTime @default(now()) @map("created_at")
+  id             String   @id @default(cuid())
+  organizationId String?  @map("organization_id") // Null for system/master actions
+  userId         String?  @map("user_id") // Null for system actions
+  action         String // login, logout, password_change, 2fa_enable, 2fa_disable, campaign_start, etc
+  resource       String? // Type of resource (campaign, list, contact, etc)
+  resourceId     String?  @map("resource_id") // ID of the affected resource
+  details        Json? // Additional details about the action
+  ipAddress      String?  @map("ip_address")
+  userAgent      String?  @map("user_agent")
+  createdAt      DateTime @default(now()) @map("created_at")
 
+  organization Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  user         User?         @relation(fields: [userId], references: [id])
+
+  @@index([organizationId])
   @@index([userId])
   @@index([action])
   @@index([createdAt])
@@ -411,58 +646,51 @@ model AuditLog {
 // ==================== LGPD COMPLIANCE ====================
 
 model ContactConsent {
-  id          String    @id @default(cuid())
-  phoneNumber String    @map("phone_number")
-  consentType String    @map("consent_type") // marketing, transactional
-  granted     Boolean   @default(false)
-  grantedAt   DateTime? @map("granted_at")
-  revokedAt   DateTime? @map("revoked_at")
-  source      String?   // import, manual, opt-in, api
-  ipAddress   String?   @map("ip_address")
-  createdAt   DateTime  @default(now()) @map("created_at")
-  updatedAt   DateTime  @updatedAt @map("updated_at")
+  id             String    @id @default(cuid())
+  organizationId String?   @map("organization_id")
+  phoneNumber    String    @map("phone_number")
+  consentType    String    @map("consent_type") // marketing, transactional
+  granted        Boolean   @default(false)
+  grantedAt      DateTime? @map("granted_at")
+  revokedAt      DateTime? @map("revoked_at")
+  source         String?   // import, manual, opt-in, api
+  ipAddress      String?   @map("ip_address")
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @updatedAt @map("updated_at")
+
+  organization Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
 
   @@unique([phoneNumber, consentType])
+  @@index([organizationId])
   @@index([phoneNumber])
   @@map("contact_consents")
 }
 
 model Blacklist {
-  id          String   @id @default(cuid())
-  phoneNumber String   @unique @map("phone_number")
-  reason      String?  // opt-out, complaint, manual, keyword
-  addedBy     String?  @map("added_by") // userId or 'system'
-  createdAt   DateTime @default(now()) @map("created_at")
+  id             String   @id @default(cuid())
+  organizationId String?  @map("organization_id") // Null for global blacklist
+  phoneNumber    String   @map("phone_number")
+  reason         String?  // opt_out_keyword, manual, bounce, spam_report
+  keyword        String?  // palavra que trigou opt-out: "pare", "sair"
+  addedBy        String?  @map("added_by") // userId or 'system'
+  createdAt      DateTime @default(now()) @map("created_at")
 
+  organization Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@unique([organizationId, phoneNumber])
+  @@index([organizationId])
   @@index([phoneNumber])
   @@map("blacklist")
 }
 
-// ==================== MULTI-TENANCY ====================
-
-model Organization {
-  id        String   @id @default(cuid())
-  name      String
-  slug      String   @unique
-  plan      String   @default("free") // free, starter, pro, enterprise
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
-
-  members OrganizationMember[]
-
-  @@map("organizations")
-}
-
-model OrganizationMember {
+model BlacklistKeyword {
   id             String   @id @default(cuid())
   organizationId String   @map("organization_id")
-  userId         String   @map("user_id")
-  role           String   @default("member") // owner, admin, member, viewer
+  keyword        String   // "pare", "sair", "cancelar", "stop", "remover"
   createdAt      DateTime @default(now()) @map("created_at")
 
   organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
 
-  @@unique([organizationId, userId])
-  @@index([userId])
-  @@map("organization_members")
+  @@unique([organizationId, keyword])
+  @@map("blacklist_keywords")
 }

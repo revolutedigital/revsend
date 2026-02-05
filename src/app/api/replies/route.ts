@@ -5,12 +5,12 @@ import { db } from "@/lib/db";
 export const GET = apiHandler(async (req: NextRequest, { session }) => {
   const { searchParams } = new URL(req.url);
   const campaignId = searchParams.get("campaignId");
-  const page = parseInt(searchParams.get("page") || "1");
-  const limit = parseInt(searchParams.get("limit") || "50");
+  const page = Math.max(1, parseInt(searchParams.get("page") || "1"));
+  const limit = Math.min(200, Math.max(1, parseInt(searchParams.get("limit") || "50")));
 
   const where = {
     campaign: {
-      userId: session!.user.id,
+      organizationId: session!.user.organizationId!,
     },
     ...(campaignId ? { campaignId } : {}),
   };
@@ -53,4 +53,4 @@ export const GET = apiHandler(async (req: NextRequest, { session }) => {
       pages: Math.ceil(total / limit),
     },
   });
-});
+}, { requiredPermission: "campaigns:read" });

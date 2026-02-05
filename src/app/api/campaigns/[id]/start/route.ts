@@ -4,11 +4,11 @@ import { db } from "@/lib/db";
 import { startCampaignDispatch } from "@/lib/queue/dispatcher";
 
 export const POST = apiHandler(async (_req: NextRequest, { params, session }) => {
-  // Verificar se a campanha pertence ao usuário
+  // Verificar se a campanha pertence à organização
   const campaign = await db.campaign.findFirst({
     where: {
       id: params?.id,
-      userId: session!.user.id,
+      organizationId: session!.user.organizationId!,
     },
     include: {
       campaignNumbers: {
@@ -45,8 +45,24 @@ export const POST = apiHandler(async (_req: NextRequest, { params, session }) =>
     );
   }
 
+  // Atomic status update to prevent double dispatch (race condition)
+  const updated = await db.campaign.updateMany({
+    where: {
+      id: params!.id,
+      status: { in: ["draft", "paused"] },
+    },
+    data: { status: "running" },
+  });
+
+  if (updated.count === 0) {
+    return NextResponse.json(
+      { error: "Campanha já está em execução" },
+      { status: 409 }
+    );
+  }
+
   // Iniciar disparo
   await startCampaignDispatch(params!.id);
 
   return NextResponse.json({ success: true });
-});
+}, { requiredPermission: 'campaigns:start' });

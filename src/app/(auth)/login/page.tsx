@@ -4,7 +4,7 @@ import { useState } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { RevSendLogo } from "@/components/logo/RevSendLogo";
+import { RevSendMascotAnimated } from "@/components/logo/RevSendMascot";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -47,7 +47,7 @@ export default function LoginPage() {
     <Card className="w-full border-navy-400/30 bg-navy-600/50 backdrop-blur-sm shadow-2xl">
       <CardHeader className="text-center">
         <div className="flex justify-center mb-4">
-          <RevSendLogo className="w-20 h-20 hover-lift" />
+          <RevSendMascotAnimated className="w-24 h-28" />
         </div>
         <CardTitle className="text-2xl font-display text-white">
           Entrar no <span className="text-coral">RevSend</span>

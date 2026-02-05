@@ -15,7 +15,7 @@ const DEFAULT_STAGES = [
 
 export const GET = apiHandler(async (_req: NextRequest, { session }) => {
   let stages = await db.pipelineStage.findMany({
-    where: { userId: session!.user.id },
+    where: { organizationId: session!.user.organizationId! },
     orderBy: { orderIndex: "asc" },
     include: {
       _count: {
@@ -29,12 +29,13 @@ export const GET = apiHandler(async (_req: NextRequest, { session }) => {
     await db.pipelineStage.createMany({
       data: DEFAULT_STAGES.map((stage) => ({
         ...stage,
+        organizationId: session!.user.organizationId!,
         userId: session!.user.id,
       })),
     });
 
     stages = await db.pipelineStage.findMany({
-      where: { userId: session!.user.id },
+      where: { organizationId: session!.user.organizationId! },
       orderBy: { orderIndex: "asc" },
       include: {
         _count: {
@@ -45,7 +46,7 @@ export const GET = apiHandler(async (_req: NextRequest, { session }) => {
   }
 
   return NextResponse.json({ stages });
-});
+}, { requiredPermission: "pipeline:read" });
 
 export const POST = apiHandler(async (req: NextRequest, { session }) => {
   const body = await req.json();
@@ -60,12 +61,13 @@ export const POST = apiHandler(async (req: NextRequest, { session }) => {
 
   // Buscar o maior orderIndex
   const lastStage = await db.pipelineStage.findFirst({
-    where: { userId: session!.user.id },
+    where: { organizationId: session!.user.organizationId! },
     orderBy: { orderIndex: "desc" },
   });
 
   const stage = await db.pipelineStage.create({
     data: {
+      organizationId: session!.user.organizationId!,
       userId: session!.user.id,
       name,
       color: color || "#6B7280",
@@ -76,7 +78,7 @@ export const POST = apiHandler(async (req: NextRequest, { session }) => {
   });
 
   return NextResponse.json({ stage });
-});
+}, { requiredPermission: "pipeline:create" });
 
 export const PUT = apiHandler(async (req: NextRequest, { session }) => {
   const body = await req.json();
@@ -95,7 +97,7 @@ export const PUT = apiHandler(async (req: NextRequest, { session }) => {
       db.pipelineStage.update({
         where: {
           id: stage.id,
-          userId: session!.user.id,
+          organizationId: session!.user.organizationId!,
         },
         data: { orderIndex: stage.orderIndex },
       })
@@ -103,7 +105,7 @@ export const PUT = apiHandler(async (req: NextRequest, { session }) => {
   );
 
   return NextResponse.json({ success: true });
-});
+}, { requiredPermission: "pipeline:create" });
 
 export const DELETE = apiHandler(async (req: NextRequest, { session }) => {
   const { searchParams } = new URL(req.url);
@@ -118,7 +120,7 @@ export const DELETE = apiHandler(async (req: NextRequest, { session }) => {
 
   // Verificar se há deals neste estágio
   const dealsCount = await db.deal.count({
-    where: { stageId, userId: session!.user.id },
+    where: { stageId, organizationId: session!.user.organizationId! },
   });
 
   if (dealsCount > 0) {
@@ -131,9 +133,9 @@ export const DELETE = apiHandler(async (req: NextRequest, { session }) => {
   await db.pipelineStage.delete({
     where: {
       id: stageId,
-      userId: session!.user.id,
+      organizationId: session!.user.organizationId!,
     },
   });
 
   return NextResponse.json({ success: true });
-});
+}, { requiredPermission: "pipeline:create" });

@@ -11,10 +11,10 @@ interface MessageInput {
   mediaName?: string;
 }
 
-// GET - Listar campanhas do usuário
+// GET - Listar campanhas da organização
 export const GET = apiHandler(async (_req: NextRequest, { session }) => {
   const campaigns = await db.campaign.findMany({
-    where: { userId: session!.user.id },
+    where: { organizationId: session!.user.organizationId! },
     orderBy: { createdAt: "desc" },
     include: {
       list: {
@@ -33,7 +33,7 @@ export const GET = apiHandler(async (_req: NextRequest, { session }) => {
   });
 
   return NextResponse.json({ campaigns });
-});
+}, { requiredPermission: "campaigns:read" });
 
 // POST - Criar nova campanha
 export const POST = apiHandler(async (req: NextRequest, { session }) => {
@@ -57,11 +57,11 @@ export const POST = apiHandler(async (req: NextRequest, { session }) => {
     );
   }
 
-  // Verificar se a lista pertence ao usuário
+  // Verificar se a lista pertence à organização
   const list = await db.contactList.findFirst({
     where: {
       id: listId,
-      userId: session!.user.id,
+      organizationId: session!.user.organizationId!,
     },
   });
 
@@ -72,11 +72,11 @@ export const POST = apiHandler(async (req: NextRequest, { session }) => {
     );
   }
 
-  // Verificar se os números pertencem ao usuário
+  // Verificar se os números pertencem à organização
   const numbers = await db.whatsappNumber.findMany({
     where: {
       id: { in: whatsappNumberIds },
-      userId: session!.user.id,
+      organizationId: session!.user.organizationId!,
     },
   });
 
@@ -91,6 +91,7 @@ export const POST = apiHandler(async (req: NextRequest, { session }) => {
   const campaign = await db.campaign.create({
     data: {
       userId: session!.user.id,
+      organizationId: session!.user.organizationId!,
       listId,
       name,
       minIntervalSeconds: minIntervalSeconds || 30,
@@ -125,4 +126,4 @@ export const POST = apiHandler(async (req: NextRequest, { session }) => {
   }
 
   return NextResponse.json({ campaign }, { status: 201 });
-});
+}, { requiredPermission: "campaigns:create" });

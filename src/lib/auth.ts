@@ -2,6 +2,7 @@ import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import { compare } from "bcryptjs";
 import { db } from "./db";
+import { getEffectiveRole } from "./permissions";
 
 const MAX_LOGIN_ATTEMPTS = 5;
 const LOCKOUT_DURATION_MS = 15 * 60 * 1000; // 15 minutes
@@ -21,6 +22,17 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
 
         const user = await db.user.findUnique({
           where: { email: credentials.email as string },
+          include: {
+            organizations: {
+              include: {
+                organization: true,
+              },
+              orderBy: {
+                createdAt: "asc",
+              },
+              take: 1, // Get first (default) organization
+            },
+          },
         });
 
         if (!user) {
@@ -60,24 +72,66 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           });
         }
 
+        // Get first organization membership (default org)
+        const firstMembership = user.organizations[0];
+
         return {
           id: user.id,
           email: user.email,
           name: user.name,
+          isMaster: user.isMaster,
+          // Include org info for JWT callback
+          currentOrgId: firstMembership?.organizationId || null,
+          currentOrgRole: firstMembership?.role || null,
         };
       },
     }),
   ],
   callbacks: {
-    async jwt({ token, user }) {
+    async jwt({ token, user, trigger, session }) {
+      // Initial sign in
       if (user) {
-        token.id = user.id;
+        token.id = user.id!;
+        token.isMaster = user.isMaster!
+        token.currentOrgId = (user as any).currentOrgId || null;
+        token.currentOrgRole = (user as any).currentOrgRole || null;
       }
+
+      // Handle session update (e.g., org switch)
+      if (trigger === "update" && session) {
+        // Validate that user has access to the new org
+        if (session.currentOrgId) {
+          const membership = await db.organizationMember.findUnique({
+            where: {
+              organizationId_userId: {
+                organizationId: session.currentOrgId,
+                userId: token.id,
+              },
+            },
+          });
+
+          // Master can switch to any org
+          if (membership || token.isMaster) {
+            token.currentOrgId = session.currentOrgId;
+            token.currentOrgRole = membership?.role || null;
+          }
+        }
+      }
+
       return token;
     },
     async session({ session, token }) {
       if (session.user) {
-        session.user.id = token.id as string;
+        session.user.id = token.id;
+        session.user.isMaster = token.isMaster;
+        session.user.currentOrgId = token.currentOrgId;
+        session.user.currentOrgRole = token.currentOrgRole;
+
+        // Compute effective role
+        session.user.role = getEffectiveRole(
+          token.isMaster,
+          token.currentOrgRole
+        );
       }
       return session;
     },

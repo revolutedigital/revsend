@@ -1,4 +1,5 @@
-import { RevSendLogo, RevSendWordmark } from "@/components/logo/RevSendLogo";
+import { RevSendWordmark } from "@/components/logo/RevSendLogo";
+import { RevSendMascotAnimated } from "@/components/logo/RevSendMascot";
 import Link from "next/link";
 
 export default function Home() {
@@ -26,7 +27,7 @@ export default function Home() {
         <div className="max-w-md w-full space-y-10 text-center">
           {/* Logo with animation */}
           <div className="animate-in-up">
-            <RevSendLogo className="w-36 h-36 mx-auto hover-lift" />
+            <RevSendMascotAnimated className="w-40 h-44 mx-auto" />
           </div>
 
           {/* Typography */}

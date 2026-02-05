@@ -9,6 +9,7 @@ import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { toast } from 'sonner'
 import { Loader2, ArrowLeft, CheckCircle2, Eye, EyeOff } from 'lucide-react'
+import { RevSendMascot } from '@/components/logo/RevSendMascot'
 
 function ResetPasswordForm() {
   const router = useRouter()
@@ -113,7 +114,10 @@ function ResetPasswordForm() {
   return (
     <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-navy via-navy to-orange/10">
       <Card className="w-full max-w-md">
-        <CardHeader>
+        <CardHeader className="text-center">
+          <div className="flex justify-center mb-4">
+            <RevSendMascot className="w-20 h-24" variant="static" mood="happy" />
+          </div>
           <CardTitle>Redefinir Senha</CardTitle>
           <CardDescription>Digite sua nova senha abaixo</CardDescription>
         </CardHeader>
