@@ -34,8 +34,7 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-# Prisma
-/prisma/migrations
+# Prisma (keep migrations tracked for deployment)
 
 # WhatsApp sessions
 /sessions
