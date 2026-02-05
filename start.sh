@@ -3,12 +3,16 @@ set -e
 
 echo "🔄 Running database migrations..."
 
-# Sync Prisma schema with database
-# --accept-data-loss allows destructive changes (be careful in production)
+# Run SQL migration for multi-tenant support
+if [ -f "prisma/run-migration.js" ]; then
+  node prisma/run-migration.js || echo "⚠️ Migration script had issues..."
+fi
+
+# Sync remaining schema changes
 if prisma db push --skip-generate 2>&1; then
   echo "✅ Database schema synced successfully"
 else
-  echo "⚠️ Database sync had issues, server will start anyway..."
+  echo "⚠️ Schema sync had issues, server will start anyway..."
 fi
 
 echo "🚀 Starting server..."
