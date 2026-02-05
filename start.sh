@@ -8,8 +8,8 @@ if [ -f "prisma/run-migration.js" ]; then
   node prisma/run-migration.js || echo "⚠️ Migration script had issues..."
 fi
 
-# Sync remaining schema changes
-if prisma db push --skip-generate 2>&1; then
+# Sync remaining schema changes (accept data loss for constraint changes)
+if prisma db push --skip-generate --accept-data-loss 2>&1; then
   echo "✅ Database schema synced successfully"
 else
   echo "⚠️ Schema sync had issues, server will start anyway..."
