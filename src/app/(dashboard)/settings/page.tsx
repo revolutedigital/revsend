@@ -10,12 +10,16 @@ import { Label } from "@/components/ui/label";
 import { WhatsAppManager } from "@/components/settings/WhatsAppManager";
 import { WebhookManager } from "@/components/settings/WebhookManager";
 import { AuditLogsViewer } from "@/components/settings/AuditLogsViewer";
+import { TeamManager } from "@/components/settings/TeamManager";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { TwoFactorSetup } from "@/components/auth/two-factor-setup";
-import { Smartphone, Key, User, Loader2, CheckCircle2, Webhook, Palette, AlertCircle, Shield, Activity } from "lucide-react";
+import { usePermission } from "@/hooks/use-permission";
+import { Smartphone, Key, User, Loader2, CheckCircle2, Webhook, Palette, AlertCircle, Shield, Activity, Users } from "lucide-react";
 
 export default function SettingsPage() {
   const { data: session, update } = useSession();
+  const { can, role } = usePermission();
+  const canManageTeam = can("members:read");
   const [apiKey, setApiKey] = useState("");
   const [hasApiKey, setHasApiKey] = useState(false);
   const [name, setName] = useState(session?.user?.name || "");
@@ -121,6 +125,24 @@ export default function SettingsPage() {
       />
 
       <div className="p-6 space-y-6">
+        {/* Team Management - Only for gerentes */}
+        {canManageTeam && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Users className="h-5 w-5 text-orange" />
+                Equipe
+              </CardTitle>
+              <CardDescription>
+                Gerencie os membros da sua organizacao e convide novos integrantes
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <TeamManager />
+            </CardContent>
+          </Card>
+        )}
+
         {/* WhatsApp Numbers */}
         <Card>
           <CardHeader>
